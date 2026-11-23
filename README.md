@@ -38,9 +38,12 @@ Nothing here holds or calls an AI provider.
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text, and can have a caption.
 - **Link to Articles, not pages.** Every factual claim links to the archive, and the link should be
-  the **Article** it comes from: its View Article link, `/search?view=<Item id>`, as the Article's
-  copy-link button gives it. For example,
-  `[the Examiner asked](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172)`.
+  the **Article** it comes from. Press the Article's copy-link button (on its search result or in
+  View Article) and paste the address, for example
+  `[the Examiner asked](https://beta.manxpapers.com/items/IME/IME-1946-07-05/0001/record/172)`.
+  - The check accepts the address as pasted, from Beta or the live site, and stores it as the
+    site's own path, `/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172`. Typing that path
+    works too.
   - An Article link opens the story itself, even when it continues on another page.
   - Use a page link (`/read/IME/IME-1946-07-05/1`) only when the point is the whole page, such as
     its layout or everything printed on it.
@@ -49,10 +52,11 @@ Nothing here holds or calls an AI provider.
   readable `label` in the form "Paper, date: headline":
   ```yaml
   sources:
-    - url: /search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172
+    - url: https://beta.manxpapers.com/items/IME/IME-1946-07-05/0001/record/172
       label: "Isle of Man Examiner, 5 July 1946: Do We Still Offer a Magic Holiday Isle?"
   ```
-  An entry without a label shows its bare address, so the check warns about it.
+  Without a label, an Article shows its address and a page shows only "IME, 5 July 1946, page 1",
+  not the headline, so the check warns about any entry without one.
 - **The AI line.** Posts show "Researched with AI assistance, checked by the editor." Set
   `ai_assisted: false` only for a post written without AI.
 - **Markdown** is plain:
@@ -68,10 +72,10 @@ Nothing here holds or calls an AI provider.
 | `title` | yes | At most 120 characters |
 | `date` | yes | `YYYY-MM-DD`, when the post is listed |
 | `summary` | yes | At most 300 characters. Used on the index, in link previews, search results and RSS. |
-| `sources` | yes | One or more `{url, label}` entries. `url` is an Article (`/search?view=…`) or, for a whole page, `/read/…`. `label` is "Paper, date: headline". |
+| `sources` | yes | One or more `{url, label}` entries. `url` is an Article (its copy-link address, or `/search?view=…`) or, for a whole page, `/read/…`. `label` is "Paper, date: headline". |
 | `image`, `image_alt` | together | Share image in `images/<file-name>/`. The site's social card is the default. |
 | `updated` | no | On or after `date` |
-| `tags` | no | Up to 12 |
+| `tags` | no | Up to 12. Each links to the blog's posts with that tag (`/blog?tag=…`). Use words of letters, digits, hyphens, apostrophes, full stops or `&`, with single spaces, at most 40 characters ("St. John's", "Laxey & Lonan"). Case doesn't matter, so keep one spelling. The check refuses any other tag. |
 | `author` | no | Default "Manx Papers" |
 | `ai_assisted` | no | Default `true` |
 

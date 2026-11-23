@@ -11,10 +11,10 @@ summary: "One or two sentences for the blog index, search engines, link previews
 # author: "Manx Papers"                     # optional; this is the default
 # ai_assisted: false                        # only when no AI was used; the default shows
 #                                           # "Researched with AI assistance, checked by the editor."
-# sources: the Articles the post relies on, each the Article's copy-link address with a label
+# sources: the Articles the post relies on: paste each Article's copy-link address, with a label
 # "Paper, date: headline". A /read/ page only when the point is the whole page.
 sources:
-  - url: /search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172
+  - url: https://beta.manxpapers.com/items/IME/IME-1946-07-05/0001/record/172
     label: "Isle of Man Examiner, 5 July 1946: Do We Still Offer a Magic Holiday Isle?"
   - url: /read/IME/IME-1946-07-05/1
     label: "Isle of Man Examiner, 5 July 1946: front page"

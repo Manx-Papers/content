@@ -20,6 +20,20 @@ const VIEW_PATH = /^\/search\?view=(?:[A-Za-z0-9_:/-]|%2F|%3A)+$/i;
 // Core pages listed in the sitemap alongside visible posts.
 export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/use-ai', '/terms', '/privacy'];
 
+// Tags become /blog?tag= links. A tag is words: letters, digits, hyphens, apostrophes, full stops and
+// &, separated by single spaces, starting with a letter or digit, at most 40 characters ("St. John's",
+// "Laxey & Lonan"). postMeta refuses any other tag, so the content check and the site agree and no
+// tag is silently left out. Matching ignores case; a requested tag is trimmed and its spaces collapsed.
+export const TAG = /^[\p{L}\p{N}](?:[\p{L}\p{N}\p{M}'’.&-]| (?=[^ ])){0,39}$/u;
+export const TAG_RULE = "use words of letters, digits, hyphens, apostrophes, full stops or &, with single spaces, at most 40 characters";
+const tagKey = tag => tag.normalize('NFC').toLowerCase();
+// A post's tags as links (one per tag, ignoring case). Empty when none.
+function tagList(tags) {
+  const seen = new Set(), items = tags.filter(tag => !seen.has(tagKey(tag)) && seen.add(tagKey(tag)))
+    .map(tag => '<li><a href="/blog?tag=' + encodeURIComponent(tag) + '">' + escapeHTML(tag) + '</a></li>').join('');
+  return items ? '<ul class="blog-tags" role="list" aria-label="Tags">' + items + '</ul>' : '';
+}
+
 export const isBlogPath = path => /^\/blog(?:\/|$)/.test(path) || path === '/sitemap.xml';
 
 const realDate = value => {
@@ -46,7 +60,8 @@ export function postMeta(raw, {body = false} = {}) {
   if (raw.updated !== undefined && (!realDate(raw.updated) || raw.updated < raw.date)) fail('updated');
   if (raw.image !== undefined && (typeof raw.image !== 'string' || !IMAGE_FILE.test(raw.image))) fail('image');
   if ((raw.image === undefined) !== (raw.image_alt === undefined) || (raw.image_alt !== undefined && !text(raw.image_alt, 300))) fail('image_alt');
-  if (raw.tags !== undefined && (!Array.isArray(raw.tags) || raw.tags.length > 12 || !raw.tags.every(t => text(t, 40)))) fail('tags');
+  if (raw.tags !== undefined && (!Array.isArray(raw.tags) || raw.tags.length > 12)) fail('tags');
+  for (const tag of raw.tags ?? []) if (typeof tag !== 'string' || !TAG.test(tag)) fail('tag ' + JSON.stringify(tag) + ': ' + TAG_RULE);
   if (raw.author !== undefined && !text(raw.author, 80)) fail('author');
   if (raw.ai_assisted !== undefined && typeof raw.ai_assisted !== 'boolean') fail('ai_assisted');
   if (!Array.isArray(raw.sources) || !raw.sources.length || raw.sources.length > 50) fail('sources');
@@ -118,18 +133,27 @@ function headTags({title, description, url, image, imageAlt, type, published, up
 export const DEFAULT_IMAGE = '/assets/brand/social-card.png';
 const DEFAULT_IMAGE_ALT = 'Manx Papers: The Isle of Man in Print';
 
-export function renderIndex(posts, origin) {
+// The listing, or with `tag` the posts carrying that tag (the spelling shown is the newest post's).
+// Each card is one link: the title's ::after covers the card, and the tag links sit above it.
+export function renderIndex(posts, origin, tag) {
   const items = posts.map(post => '<li><article class="blog-card" aria-labelledby="post-' + post.slug + '">'
-    + '<h2 id="post-' + post.slug + '"><a href="/blog/' + post.slug + '">' + escapeHTML(post.title) + '</a></h2>'
+    + '<h2 id="post-' + post.slug + '"><a class="blog-card-link" href="/blog/' + post.slug + '">' + escapeHTML(post.title) + '</a></h2>'
     + '<p class="blog-byline">' + timeTag(post.date) + '</p>'
-    + '<p>' + escapeHTML(post.summary) + '</p></article></li>').join('');
+    + '<p>' + escapeHTML(post.summary) + '</p>' + tagList(post.tags) + '</article></li>').join('');
+  const list = items ? '<ul class="blog-list" role="list">' + items + '</ul>' : '<p>There are no posts yet.</p>';
+  if (tag) return {
+    title: escapeHTML('Posts tagged ‘' + tag + '’'),
+    // A filtered view of /blog: never indexed, and canonical to the blog itself.
+    head: headTags({title: 'Manx Papers blog: ' + tag, description: 'Manx Papers blog posts tagged ' + tag + '.',
+      url: origin + '/blog', image: origin + DEFAULT_IMAGE, imageAlt: DEFAULT_IMAGE_ALT, type: 'website', noindex: true}),
+    content: '<h1>Posts tagged ‘' + escapeHTML(tag) + '’</h1>\n<p class="blog-intro"><a href="/blog">All posts</a></p>\n' + list,
+  };
   return {
     title: 'Blog',
     head: headTags({title: 'Manx Papers blog', description: 'Stories from the Manx Papers archive of Isle of Man newspapers.',
       url: origin + '/blog', image: origin + DEFAULT_IMAGE, imageAlt: DEFAULT_IMAGE_ALT, type: 'website'}),
     content: '<h1>Blog</h1>\n<p class="blog-intro">Stories from the archive. Every post links to the newspaper pages it draws on. '
-      + '<a href="/blog/feed.xml">Follow by RSS</a>.</p>\n'
-      + (items ? '<ul class="blog-list" role="list">' + items + '</ul>' : '<p>There are no posts yet.</p>'),
+      + '<a href="/blog/feed.xml">Follow by RSS</a>.</p>\n' + list,
   };
 }
 
@@ -142,8 +166,8 @@ export function renderPost(post, origin, day) {
     title: escapeHTML(post.title),
     head: headTags({title: post.title, description: post.summary, url: origin + '/blog/' + post.slug, image,
       imageAlt: post.image ? post.image_alt : DEFAULT_IMAGE_ALT, type: 'article', published: post.date, updated: post.updated, noindex: scheduled}),
-    content: '<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">Blog</a></nav>\n'
-      + '<article class="blog-post" aria-labelledby="post-title">\n<div class="blog-post-head">\n'
+    content: '<div class="blog-post-nav">\n<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">Blog</a></nav>\n'
+      + tagList(post.tags) + '</div>\n<article class="blog-post" aria-labelledby="post-title">\n<div class="blog-post-head">\n'
       + '<h1 id="post-title">' + escapeHTML(post.title) + '</h1>\n'
       + '<p class="blog-byline">By ' + escapeHTML(post.author) + ' · ' + timeTag(post.date)
       + (post.updated ? ' · Updated ' + timeTag(post.updated) : '') + '</p>\n'
@@ -182,7 +206,10 @@ const IMAGE_TYPES = {jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', we
 export async function handleBlog(request, env, {respond, page, now = new Date()}) {
   const url = new URL(request.url), path = url.pathname, store = env?.BLOG;
   if (!isBlogPath(path)) return null;
-  if (url.search) return respond('Not found', {status: 404});
+  // The one query allowed is a single ?tag= on /blog, in the tag charset.
+  const params = [...url.searchParams];
+  const tag = path === '/blog' && params.length === 1 && params[0][0] === 'tag' ? params[0][1].trim().replace(/ +/g, ' ') : null;
+  if (url.search && !(tag !== null && TAG.test(tag))) return respond('Not found', {status: 404});
   const head = request.method === 'HEAD';
   const send = (body, type, init = {}) => respond(head ? null : body, {...init, headers: {'Content-Type': type, ...init.headers}});
   if (path === '/blog/') return respond(null, {status: 308, headers: {Location: '/blog'}});
@@ -200,6 +227,12 @@ export async function handleBlog(request, env, {respond, page, now = new Date()}
       return send(renderSitemap(posts, origin), 'application/xml; charset=utf-8');
     }
     if (!hasStore) return respond('Not found', {status: 404});
+    if (path === '/blog' && tag !== null) {
+      // Visible posts only; a tag no visible post carries is Not found.
+      const key = tagKey(tag), posts = (await readIndex()).filter(post => post.tags.some(t => tagKey(t) === key));
+      if (!posts.length) return respond('Not found', {status: 404});
+      return send(await page(renderIndex(posts, origin, posts[0].tags.find(t => tagKey(t) === key))), 'text/html; charset=utf-8');
+    }
     if (path === '/blog') { const view = renderIndex(await readIndex(), origin); return send(await page(view), 'text/html; charset=utf-8'); }
     if (path === '/blog/feed.xml') return send(renderFeed(await readIndex(), origin), 'application/rss+xml; charset=utf-8');
     const image = /^\/blog\/images\/([a-z0-9-]{1,80})\/([^/]+)$/.exec(path);

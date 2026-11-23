@@ -236,7 +236,7 @@ test('a source without a label is a warning, not an error; the template has none
   const bare = checkPost('laxey-wheel', good());
   assert.deepEqual(bare.errors, []);
   assert.ok(bare.post, 'still publishable');
-  assert.deepEqual(bare.warnings, ['source /read/IME/IME-1854-09-29/3 has no label; use url: and label: "Paper, date: headline"']);
+  assert.deepEqual(bare.warnings, ['source /read/IME/IME-1854-09-29/3 has no label; add label: "Paper, date: headline"']);
   const labelled = checkPost('laxey-wheel', good().replace('  - /read/IME/IME-1854-09-29/3\n', '  - url: /read/IME/IME-1854-09-29/3\n    label: "Isle of Man Examiner, 29 September 1854: front page"\n'));
   assert.deepEqual([labelled.errors, labelled.warnings], [[], []]);
   const dir = await repo({'posts/laxey-wheel.md': good()});
