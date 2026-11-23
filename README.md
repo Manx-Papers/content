@@ -30,8 +30,8 @@ Nothing here holds or calls an AI provider.
 - **Images** go in `images/<file-name>/`:
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text.
-  - Archive page images can also be shown with `/media/page/<TITLE>/<ISSUE>/<NNNN>.jpg`. Check the
-    source's terms on the site's Terms page first.
+  - Archive page images (`/media/page/…`) aren't allowed in posts yet: their reuse rights are still
+    open on Control #244. The check refuses them with a clear message.
 - **Every factual claim links to the archive page it comes from**: `[the report](/read/IME/IME-1854-09-29/3)`,
   or a View Article link copied from the address bar (`/search?view=…`). List the main pages under
   `sources`.
@@ -61,7 +61,8 @@ Check locally with `node scripts/validate.mjs`. It needs Node 22 or later and no
 tests with `node --test tests/*.test.mjs`.
 
 ## Repository setup (owner)
-- **Actions secrets:** `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `CF_ACCOUNT_ID`.
+- **Environment `blog-publish`** (deployment branches: `main` only) holds the secrets
+  `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `CF_ACCOUNT_ID`; they are not repository secrets.
   - The token is an R2 API token limited to the `manxpapers-content` bucket, with Object Read & Write.
   - Its expiry is on the Control #242 calendar.
   - If a secret is missing, the publish step fails before uploading anything and names the missing
@@ -83,6 +84,9 @@ web `main` when the blog code merges there.
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing
   `content` check.
-- Only changes to posts, images or the publishing code start a publish run.
-- A run publishes only if its commit is still the tip of `main`. Re-running an old run, or a run
-  overtaken by a newer merge, publishes nothing, so the store is never rolled back.
+- Checking and publishing are separate jobs. Publishing runs in the `blog-publish` Environment,
+  which only `main` can use, so no pull-request run can reach the content-store secrets.
+- Every commit to `main` starts a run. A run publishes only if its commit is still the tip of
+  `main`. Re-running an old run, or a run overtaken by a newer merge, publishes nothing and shows a
+  warning (the newer commit's run publishes), so the store is never rolled back. If a warning says
+  nothing published and no newer run did, run the workflow manually on `main`.

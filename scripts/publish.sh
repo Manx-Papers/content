@@ -19,7 +19,7 @@ for name in R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CF_ACCOUNT_ID; do
   [ -n "${!name:-}" ] || missing+=("$name")
 done
 if [ ${#missing[@]} -gt 0 ]; then
-  echo "::error::Missing repository Actions secret(s): ${missing[*]}. Nothing was published."
+  echo "::error::Missing blog-publish Environment secret(s): ${missing[*]}. Nothing was published."
   exit 1
 fi
 if ! [[ "$CF_ACCOUNT_ID" =~ ^[0-9a-f]{32}$ ]]; then
@@ -27,12 +27,12 @@ if ! [[ "$CF_ACCOUNT_ID" =~ ^[0-9a-f]{32}$ ]]; then
   exit 1
 fi
 
-# Never roll the store back: publish only the commit that is main's tip now. Re-running an older
-# run, or a queued run overtaken by a newer merge, publishes nothing (the newest run publishes).
+# Never roll the store back: publish only the commit that is main's tip now. Every push to main
+# runs this workflow, so when this run's commit is no longer the tip, the newer commit's run (queued
+# behind this one) publishes instead. Re-running an old run therefore publishes nothing.
 tip=
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  if ! tip=$(curl -fsS --max-time 20 -H "Authorization: Bearer ${GH_TOKEN:-}" -H "Accept: application/vnd.github.sha" \
-      "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/main"); then
+  if ! tip=$(curl -fsS --max-time 20 -H "Authorization: Bearer ${GH_TOKEN:-}" -H "Accept: application/vnd.github.sha"       "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/main"); then
     echo "::error::Could not read the current tip of main. Nothing was published."
     exit 1
   fi
@@ -40,8 +40,12 @@ elif [ -n "$testing" ]; then
   tip="${MAIN_TIP:-}"
 fi
 if [ -n "$tip" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
-  if ! [[ "$tip" =~ ^[0-9a-f]{40}$ ]] || [ "$tip" != "${GITHUB_SHA:-}" ]; then
-    echo "::notice::This run's commit ${GITHUB_SHA:-unknown} is not the current tip of main (${tip:-unknown}). Nothing was published; the run for the tip publishes."
+  if ! [[ "$tip" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "::error::The current tip of main could not be read as a commit. Nothing was published."
+    exit 1
+  fi
+  if [ "$tip" != "${GITHUB_SHA:-}" ]; then
+    echo "::warning::Nothing was published: this run's commit ${GITHUB_SHA:-unknown} is no longer the tip of main (${tip}). The run for ${tip} publishes. If that run did not publish, run this workflow manually on main."
     exit 0
   fi
 fi

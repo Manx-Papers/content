@@ -46,6 +46,8 @@ export function checkPost(slug, source) {
   for (const [, src] of html.matchAll(/<img src="([^"]*)"/g)) {
     const m = /^\/blog\/images\/([^/]+)\/([^/]+)$/.exec(unescapeHTML(src));
     if (m && m[1] === slug && IMAGE_FILE.test(m[2])) figures.push(m[2]);
+    // The Worker can show archive page images, but their reuse rights are still open (Control #244).
+    else if (unescapeHTML(src).startsWith('/media/')) errors.push('text: archive page images (' + unescapeHTML(src) + ") aren't allowed in posts yet; use an image in images/" + slug + '/');
     else errors.push('text: image ' + unescapeHTML(src) + ' is not in images/' + slug + '/');
   }
   return {post: errors.length ? null : raw, figures, errors};

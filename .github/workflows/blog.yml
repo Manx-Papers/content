@@ -1,13 +1,12 @@
 name: Blog content
 # Control #244: pull requests check posts; a merge to main publishes them to the content store
-# (R2 manxpapers-content, blog/). No site build, no Beta step. One small job per run.
+# (R2 manxpapers-content, blog/). No site build, no Beta step.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
+    # Every commit to main runs, so main's tip always has a publish run (see scripts/publish.sh).
     branches: [main]
-    # Only content and the code that checks or publishes it; a README-only merge publishes nothing.
-    paths: ['posts/**', 'images/**', 'scripts/**', 'vendor/**', '.github/workflows/blog.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,8 +30,23 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Check posts and images
         run: node scripts/validate.mjs
+  # Publishing is its own job in the blog-publish Environment, which only deployments from main can
+  # use, so no pull-request run can reach the content-store secrets, even with an edited workflow.
+  # The required check stays the content job above.
+  publish:
+    needs: content
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: blog-publish
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
       - name: Publish to the content store
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

@@ -130,7 +130,7 @@ test('publishing fails cleanly, before any upload, when a secret is missing or m
     env: {PATH: process.env.PATH, ...env, ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {})}});
   const none = run({});
   assert.equal(none.status, 1);
-  assert.match(none.stdout, /::error::Missing repository Actions secret\(s\): R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CF_ACCOUNT_ID\. Nothing was published\./);
+  assert.match(none.stdout, /::error::Missing blog-publish Environment secret\(s\): R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CF_ACCOUNT_ID\. Nothing was published\./);
   const one = run({R2_ACCESS_KEY_ID: 'k', CF_ACCOUNT_ID: '0123456789abcdef0123456789abcdef'});
   assert.match(one.stdout, /secret\(s\): R2_SECRET_ACCESS_KEY\. /);
   const bad = run({R2_ACCESS_KEY_ID: 'k', R2_SECRET_ACCESS_KEY: 'very-secret-value', CF_ACCOUNT_ID: 'not-an-id'});
@@ -166,7 +166,12 @@ test('publishing order: images and posts, then the index, then deletion, only un
     // A run whose commit is no longer main's tip (re-run of an old run, or overtaken) publishes nothing.
     const old = run({CONTENT_PUBLISH_TEST: '1', MAIN_TIP: 'b'.repeat(40), GITHUB_SHA: sha});
     assert.equal(old.status, 0, old.stdout + old.stderr);
-    assert.match(old.stdout, /::notice::This run's commit a{40} is not the current tip of main \(b{40}\)\. Nothing was published/);
+    assert.match(old.stdout, /::warning::Nothing was published: this run's commit a{40} is no longer the tip of main \(b{40}\)\..*run this workflow manually on main/);
+    assert.deepEqual(await calls(), []);
+    // A tip that is not a commit id is an error, never a quiet skip.
+    const garbled = run({CONTENT_PUBLISH_TEST: '1', MAIN_TIP: '<html>', GITHUB_SHA: sha});
+    assert.equal(garbled.status, 1);
+    assert.match(garbled.stdout, /::error::The current tip of main could not be read as a commit\. Nothing was published\./);
     assert.deepEqual(await calls(), []);
 
     // The AWS_CLI override is the test harness only: without CONTENT_PUBLISH_TEST the aws on PATH runs.
@@ -189,6 +194,10 @@ test('review fixes: rendered figures and archive links, reserved keys, # in bare
   try {
     assert.deepEqual((await validate(dir)).errors, ['posts/laxey-wheel.md: image one.jpg is not in images/laxey-wheel/']);
   } finally { await rm(dir, {recursive: true, force: true}); }
+
+  // Archive page images are refused for now, with a clear reason (image rights are still open).
+  assert.ok(checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Page 3](/media/page/IME/IME-1854-09-29/0003.jpg)')).errors
+    .includes("text: archive page images (/media/page/IME/IME-1854-09-29/0003.jpg) aren't allowed in posts yet; use an image in images/laxey-wheel/"));
 
   // The archive link must be a rendered link to a path the Worker accepts as a source.
   for (const [text, ok] of [
