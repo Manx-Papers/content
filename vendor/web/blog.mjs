@@ -30,7 +30,7 @@ const realDate = value => {
 // Text that also goes into RSS must be valid XML: no C0 controls (other than tab and newlines),
 // no U+FFFE/U+FFFF and no unpaired surrogates.
 const text = (value, max) => typeof value === 'string' && value.trim() && value.length <= max
-  && !/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value);
+  && !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value);
 const KEYS = new Set(['slug', 'title', 'date', 'summary', 'image', 'image_alt', 'updated', 'tags', 'author', 'ai_assisted', 'sources', 'body']);
 
 // Strict check of one post's front matter (and body when present). Returns the normalised post or
@@ -83,14 +83,14 @@ export function visiblePosts(index, day) {
   for (const raw of Array.isArray(index?.posts) ? index.posts : []) {
     try { posts.push(postMeta(raw)); } catch (error) { console.error(error.message); }
   }
-  // One entry per slug: the first wins, as the post page reads only blog/posts/<slug>.json anyway.
+  // One entry per slug among the visible ones (the first wins), so a future-dated duplicate never
+  // hides a visible entry. The post page reads only blog/posts/<slug>.json anyway.
   const seen = new Set();
-  return posts.filter(post => {
+  return posts.filter(post => post.date <= day).filter(post => {
     if (!seen.has(post.slug)) return seen.add(post.slug);
     console.error('blog post ' + post.slug + ': duplicate index entry');
     return false;
-  }).filter(post => post.date <= day)
-    .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+  }).sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
 }
 
 const timeTag = date => '<time datetime="' + date + '">' + longDate(date) + '</time>';
