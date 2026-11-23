@@ -1,7 +1,7 @@
 {
   "source": "Manx-Papers/web",
   "commit": "b97ed641192f8feb2b1d441d63525d701dffc1f7",
-  "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all four together when web's src/blog.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/vendor.test.mjs checks these hashes.",
+  "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all four together when web's src/blog.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
     "blog.mjs": "40bd63e5283fd34888c7cb95c72b8570e8940f43f14db6f1cac471ee761c99d4",
     "markdown.mjs": "8f26b20727c804ae3f840f067f614bb981901a2f6836deb36c5f91b6f37a2735",
