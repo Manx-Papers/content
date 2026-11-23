@@ -228,3 +228,21 @@ test('review fixes: rendered figures and archive links, reserved keys, # in bare
   const lines = [];annotate({log: line => lines.push(line)})('posts/a\r\n::warning::x%.md');
   assert.deepEqual(lines, ['::error::posts/a%0D%0A::warning::x%25.md']);
 });
+
+test('a source without a label is a warning, not an error; the template has none', async () => {
+  const template = checkPost('laxey-wheel', await readFile(join(root, 'templates/post.md'), 'utf8'));
+  assert.deepEqual(template.warnings, []);
+  assert.ok(template.post.sources.every(source => typeof source === 'object' && source.label), 'every template source is {url, label}');
+  const bare = checkPost('laxey-wheel', good());
+  assert.deepEqual(bare.errors, []);
+  assert.ok(bare.post, 'still publishable');
+  assert.deepEqual(bare.warnings, ['source /read/IME/IME-1854-09-29/3 has no label; use url: and label: "Paper, date: headline"']);
+  const labelled = checkPost('laxey-wheel', good().replace('  - /read/IME/IME-1854-09-29/3\n', '  - url: /read/IME/IME-1854-09-29/3\n    label: "Isle of Man Examiner, 29 September 1854: front page"\n'));
+  assert.deepEqual([labelled.errors, labelled.warnings], [[], []]);
+  const dir = await repo({'posts/laxey-wheel.md': good()});
+  try {
+    const result = await validate(dir);
+    assert.deepEqual(result.errors, []);
+    assert.deepEqual(result.warnings, ['posts/laxey-wheel.md: ' + bare.warnings[0]]);
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});

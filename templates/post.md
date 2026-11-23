@@ -11,21 +11,28 @@ summary: "One or two sentences for the blog index, search engines, link previews
 # author: "Manx Papers"                     # optional; this is the default
 # ai_assisted: false                        # only when no AI was used; the default shows
 #                                           # "Researched with AI assistance, checked by the editor."
-sources:                                    # at least one archive page the post relies on
-  - /read/IME/IME-1854-09-29/3
-  - url: /search?view=IME%2FIME-1854-09-29%2F0003%2Frecord%2F12
-    label: "Isle of Man Times report"
+# sources: the Articles the post relies on, each the Article's copy-link address with a label
+# "Paper, date: headline". A /read/ page only when the point is the whole page.
+sources:
+  - url: /search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172
+    label: "Isle of Man Examiner, 5 July 1946: Do We Still Offer a Magic Holiday Isle?"
+  - url: /read/IME/IME-1946-07-05/1
+    label: "Isle of Man Examiner, 5 July 1946: front page"
 ---
-Open with the story. Link every factual claim to the archive page it comes from, like
-[the Isle of Man Times report](/read/IME/IME-1854-09-29/3).
+Open with the story. Link every factual claim to the Article it comes from, like
+[the Examiner asked](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172). Link a whole page,
+like [the front page](/read/IME/IME-1946-07-05/1), only when the point is the page itself.
 
 ## A heading (use ##, the title is the only top-level heading)
 
-Plain Markdown: **bold**, *italic*, [links](/read/IME/IME-1854-09-29/3), lists and quotes.
+Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172), lists and quotes.
 
 - A list item
 - Another
 
 > A short quotation from the paper.
+
+A picture that isn't from the archive, such as a modern photo or a postcard, goes in `images/<file-name>/`
+with alt text and an optional caption. Newspaper clippings from the archive can't be used yet.
 
 ![Alt text describing the image](laxey-wheel.jpg "Optional caption")

@@ -11,7 +11,8 @@ no Beta step and no code release.
    - the front matter must be valid;
    - the text must be safe;
    - every image the post shows must be in its folder;
-   - at least one claim must link to an archive page (`/read/…` or `/search?view=…`).
+   - at least one claim must link to the archive (an Article, `/search?view=…`, or a page, `/read/…`);
+   - a `sources` entry without a label is a warning, not an error.
 3. **Review and merge.** The owner reviews the pull request and merges it. **Merging is publishing.**
 4. **Publish.** The workflow copies the posts to the content store, the R2 bucket `manxpapers-content`
    under `blog/`. The website reads that store on every request.
@@ -27,14 +28,31 @@ Nothing here holds or calls an AI provider.
   the post's address:
   - it uses lower-case words joined by hyphens, for example `posts/laxey-wheel.md` → `/blog/laxey-wheel`;
   - don't rename a post once it's published.
-- **Images** go in `images/<file-name>/`:
+- **Pictures from the archive.** The owner has decided that posts can show newspaper clippings from
+  the archive; showing them is the main reason for the blog.
+  - Clippings will be embedded by naming the Article, without copying any files. That arrives after
+    the first blog release (web#183).
+  - Until then, archive images can't be used in posts: the check refuses `/media/…` images with a
+    clear message.
+- **Other pictures** (modern photos, postcards and so on) go in `images/<file-name>/`:
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
-  - every image needs alt text.
-  - Archive page images (`/media/page/…`) aren't allowed in posts yet: their reuse rights are still
-    open on Control #244. The check refuses them with a clear message.
-- **Every factual claim links to the archive page it comes from**: `[the report](/read/IME/IME-1854-09-29/3)`,
-  or a View Article link copied from the address bar (`/search?view=…`). List the main pages under
-  `sources`.
+  - every image needs alt text, and can have a caption.
+- **Link to Articles, not pages.** Every factual claim links to the archive, and the link should be
+  the **Article** it comes from: its View Article link, `/search?view=<Item id>`, as the Article's
+  copy-link button gives it. For example,
+  `[the Examiner asked](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172)`.
+  - An Article link opens the story itself, even when it continues on another page.
+  - Use a page link (`/read/IME/IME-1946-07-05/1`) only when the point is the whole page, such as
+    its layout or everything printed on it.
+  - The same applies to links in the text and to `sources`.
+- **Sources.** List the Articles the post relies on under `sources`. Give every entry a `url` and a
+  readable `label` in the form "Paper, date: headline":
+  ```yaml
+  sources:
+    - url: /search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172
+      label: "Isle of Man Examiner, 5 July 1946: Do We Still Offer a Magic Holiday Isle?"
+  ```
+  An entry without a label shows its bare address, so the check warns about it.
 - **The AI line.** Posts show "Researched with AI assistance, checked by the editor." Set
   `ai_assisted: false` only for a post written without AI.
 - **Markdown** is plain:
@@ -50,14 +68,15 @@ Nothing here holds or calls an AI provider.
 | `title` | yes | At most 120 characters |
 | `date` | yes | `YYYY-MM-DD`, when the post is listed |
 | `summary` | yes | At most 300 characters. Used on the index, in link previews, search results and RSS. |
-| `sources` | yes | One or more `/read/…` or `/search?view=…` paths, optionally `{url, label}` |
+| `sources` | yes | One or more `{url, label}` entries. `url` is an Article (`/search?view=…`) or, for a whole page, `/read/…`. `label` is "Paper, date: headline". |
 | `image`, `image_alt` | together | Share image in `images/<file-name>/`. The site's social card is the default. |
 | `updated` | no | On or after `date` |
 | `tags` | no | Up to 12 |
 | `author` | no | Default "Manx Papers" |
 | `ai_assisted` | no | Default `true` |
 
-Check locally with `node scripts/validate.mjs`. It needs Node 22 or later and no installs. Run the
+Check locally with `node scripts/validate.mjs`. It needs Node 22 or later and no installs. Errors
+fail the check; warnings are listed but don't. Run the
 tests with `node --test tests/*.test.mjs`.
 
 ## Repository setup (owner)

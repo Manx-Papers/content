@@ -24,18 +24,22 @@ MAGIC.jpeg = MAGIC.jpg;
 
 const list = async dir => { try { return await readdir(dir, {withFileTypes: true}); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } };
 
-// Checks one post's text. Returns {post, figures, errors}; post is the stored JSON when valid.
+// Checks one post's text. Returns {post, figures, errors, warnings}; post is the stored JSON when
+// valid. Warnings (a source without a label) are reported but don't fail the check.
 export function checkPost(slug, source) {
-  const errors = [];
-  if (slug.length > 80 || !SLUG.test(slug)) return {errors: ['file name must be lower-case words joined by hyphens (a-z, 0-9), at most 80 characters']};
+  const errors = [], warnings = [];
+  if (slug.length > 80 || !SLUG.test(slug)) return {warnings: [], errors: ['file name must be lower-case words joined by hyphens (a-z, 0-9), at most 80 characters']};
   let parsed;
-  try { parsed = parsePost(source); } catch (error) { return {errors: ['front matter: ' + error.message]}; }
+  try { parsed = parsePost(source); } catch (error) { return {warnings: [], errors: ['front matter: ' + error.message]}; }
   const {data, body} = parsed;
   if (Object.hasOwn(data, 'slug') && data.slug !== slug) errors.push('slug in front matter differs from the file name');
   if (Object.hasOwn(data, 'body')) errors.push('body is not a front-matter field');
   const raw = {...data, slug, body};
   try { postMeta(raw, {body: true}); } catch (error) { errors.push(error.message.replace(/^blog post [^:]+: /, 'front matter: ')); }
   if (!body.trim()) errors.push('the post has no text');
+  // Without a label the source list shows the bare address (README: "Paper, date: headline").
+  if (Array.isArray(data.sources)) for (const source of data.sources)
+    if (typeof source === 'string') warnings.push('source ' + source + ' has no label; use url: and label: "Paper, date: headline"');
   // Links and figures are read from what the Worker's renderer actually emits, so every form it
   // accepts (a bare file name, /blog/images/<slug>/<file>, inside a quote) is checked.
   const {html, problems} = renderMarkdown(body, {slug});
@@ -50,12 +54,12 @@ export function checkPost(slug, source) {
     else if (unescapeHTML(src).startsWith('/media/')) errors.push('text: archive page images (' + unescapeHTML(src) + ") aren't allowed in posts yet; use an image in images/" + slug + '/');
     else errors.push('text: image ' + unescapeHTML(src) + ' is not in images/' + slug + '/');
   }
-  return {post: errors.length ? null : raw, figures, errors};
+  return {post: errors.length ? null : raw, figures, errors, warnings};
 }
 
-// Validates the whole repository. Returns {posts, images, errors}; errors are "path: message".
+// Validates the whole repository. Returns {posts, images, errors, warnings}, each "path: message".
 export async function validate(root) {
-  const errors = [], posts = [], images = [];
+  const errors = [], warnings = [], posts = [], images = [];
   const slugs = new Set();
   for (const entry of await list(join(root, 'posts'))) {
     const path = 'posts/' + entry.name;
@@ -64,6 +68,7 @@ export async function validate(root) {
     const slug = entry.name.slice(0, -3);
     const result = checkPost(slug, await readFile(join(root, path), 'utf8'));
     for (const error of result.errors) errors.push(path + ': ' + error);
+    for (const warning of result.warnings) warnings.push(path + ': ' + warning);
     slugs.add(slug);
     if (result.post) posts.push({...result, slug, path});
   }
@@ -87,7 +92,7 @@ export async function validate(root) {
     for (const name of [...(post.image ? [post.image] : []), ...figures])
       if (!have.has(name)) errors.push(path + ': image ' + name + ' is not in images/' + slug + '/');
   }
-  return {posts: posts.map(p => p.post), images, errors};
+  return {posts: posts.map(p => p.post), images, errors, warnings};
 }
 
 // Writes the content store layout under out/blog: posts/<slug>.json, images/<slug>/<file>, index.json.
