@@ -1,0 +1,38 @@
+name: Blog content
+# Control #244: pull requests check posts; a merge to main publishes them to the content store
+# (R2 manxpapers-content, blog/). No site build, no Beta step. One small job per run.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: blog-content-${{ github.ref }}
+  # Never cancel a publish in progress; a newer push queues behind it.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  content:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+      - name: Test the checker
+        run: node --test tests/*.test.mjs
+      - name: Check posts and images
+        run: node scripts/validate.mjs
+      - name: Publish to the content store
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: bash scripts/publish.sh
