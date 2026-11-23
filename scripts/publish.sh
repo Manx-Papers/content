@@ -32,7 +32,8 @@ fi
 # behind this one) publishes instead. Re-running an old run therefore publishes nothing.
 tip=
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  if ! tip=$(curl -fsS --max-time 20 -H "Authorization: Bearer ${GH_TOKEN:-}" -H "Accept: application/vnd.github.sha"       "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/main"); then
+  if ! tip=$(curl -fsS --max-time 20 -H "Authorization: Bearer ${GH_TOKEN:-}" -H "Accept: application/vnd.github.sha" \
+      "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/main"); then
     echo "::error::Could not read the current tip of main. Nothing was published."
     exit 1
   fi
