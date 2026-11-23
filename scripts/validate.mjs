@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {validate, build} from './content.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+// GitHub workflow-command data escaping, so a file name cannot start a new command line.
+const annotate = text => console.log('::error::' + String(text).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A'));
 const at = process.argv.indexOf('--build');
 try {
   if (at > 0) {
@@ -14,11 +16,11 @@ try {
   } else {
     const {posts, images, errors} = await validate(root);
     if (errors.length) {
-      for (const error of errors) console.log('::error::' + error);
+      for (const error of errors) annotate(error);
       process.exitCode = 1;
     } else console.log('Content is valid: ' + posts.length + ' post(s), ' + images.length + ' image(s)');
   }
 } catch (error) {
-  console.log('::error::' + error.message.split('\n').join('%0A'));
+  annotate(error.message);
   process.exitCode = 1;
 }

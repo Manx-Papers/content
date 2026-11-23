@@ -143,21 +143,79 @@ test('publishing order: images and posts, then the index, then deletion, only un
   const bin = await mkdtemp(join(tmpdir(), 'content-aws-'));
   const log = join(bin, 'calls.txt');
   await writeFile(join(bin, 'aws'), '#!/usr/bin/env bash\nprintf "%s\n" "$*" >> "$AWS_LOG"\n', {mode: 0o755});
+  const sha = 'a'.repeat(40);
+  const run = env => spawnSync('bash', ['scripts/publish.sh'], {cwd: root, encoding: 'utf8', env: {PATH: process.env.PATH,
+    ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {}),
+    AWS_CLI: join(bin, 'aws').replaceAll('\\', '/'), AWS_LOG: log.replaceAll('\\', '/'),
+    R2_ACCESS_KEY_ID: 'k', R2_SECRET_ACCESS_KEY: 'very-secret-value', CF_ACCOUNT_ID: '0123456789abcdef0123456789abcdef', ...env}});
+  const calls = async () => { try { return (await readFile(log, 'utf8')).trim().split('\n').filter(Boolean); } catch { return []; } };
   try {
-    const r = spawnSync('bash', ['scripts/publish.sh'], {cwd: root, encoding: 'utf8', env: {PATH: process.env.PATH,
-      ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {}),
-      AWS_CLI: join(bin, 'aws').replaceAll('\\', '/'), AWS_LOG: log.replaceAll('\\', '/'),
-      R2_ACCESS_KEY_ID: 'k', R2_SECRET_ACCESS_KEY: 'very-secret-value', CF_ACCOUNT_ID: '0123456789abcdef0123456789abcdef'}});
+    const r = run({CONTENT_PUBLISH_TEST: '1', MAIN_TIP: sha, GITHUB_SHA: sha});
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.doesNotMatch(r.stdout + r.stderr, /very-secret-value/);
-    const calls = (await readFile(log, 'utf8')).trim().split('\n').map(line => line.replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, 'OUT'));
     const endpoint = 's3 --endpoint-url https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com --only-show-errors ';
-    const steps = calls.map(c => { assert.ok(c.startsWith(endpoint), c); return c.slice(endpoint.length); });
+    const steps = (await calls()).map(line => line.replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, 'OUT')).map(c => { assert.ok(c.startsWith(endpoint), c); return c.slice(endpoint.length); });
     // This repository has no images yet, so the image sync is skipped.
     assert.equal(steps.length, 3, steps.join('\n'));
     assert.match(steps[0], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
     assert.match(steps[1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
-    assert.match(steps[2], /^sync OUT\/blog s3:\/\/manxpapers-content\/blog --delete$/);
+    assert.match(steps[2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
     assert.match(r.stdout, /Published 0 post\(s\) and 0 image\(s\) to manxpapers-content\/blog\//);
+    await rm(log, {force: true});
+
+    // A run whose commit is no longer main's tip (re-run of an old run, or overtaken) publishes nothing.
+    const old = run({CONTENT_PUBLISH_TEST: '1', MAIN_TIP: 'b'.repeat(40), GITHUB_SHA: sha});
+    assert.equal(old.status, 0, old.stdout + old.stderr);
+    assert.match(old.stdout, /::notice::This run's commit a{40} is not the current tip of main \(b{40}\)\. Nothing was published/);
+    assert.deepEqual(await calls(), []);
+
+    // The AWS_CLI override is the test harness only: without CONTENT_PUBLISH_TEST the aws on PATH runs.
+    // (Inside Actions it is never honoured either; that path also reads main's tip over the network.)
+    const shadow = join(bin, 'path');
+    await mkdir(shadow);
+    await writeFile(join(shadow, 'aws'), '#!/usr/bin/env bash\nprintf "%s\n" "$*" >> "$AWS_LOG.path"\n', {mode: 0o755});
+    const plain = run({PATH: shadow.replaceAll('\\', '/').replace(/^([A-Za-z]):/, (_, d) => '/' + d.toLowerCase()) + ':' + process.env.PATH});
+    assert.equal(plain.status, 0, plain.stdout + plain.stderr);
+    assert.deepEqual(await calls(), [], 'AWS_CLI ignored outside the harness');
+    assert.equal((await readFile(log + '.path', 'utf8')).trim().split('\n').length, 3, 'the aws on PATH ran instead');
   } finally { await rm(bin, {recursive: true, force: true}); }
+});
+
+test('review fixes: rendered figures and archive links, reserved keys, # in bare values, escaped annotations', async () => {
+  // Figures are taken from the rendered HTML: own-path form and figures inside quotes are checked too.
+  const body = '[a](/read/IME/IME-1854-09-29/3)\n\n![One](/blog/images/laxey-wheel/one.jpg)\n\n> ![Two](two.png)';
+  assert.deepEqual(checkPost('laxey-wheel', good('', body)).figures, ['one.jpg', 'two.png']);
+  const dir = await repo({'posts/laxey-wheel.md': good('', body), 'images/laxey-wheel/two.png': PNG});
+  try {
+    assert.deepEqual((await validate(dir)).errors, ['posts/laxey-wheel.md: image one.jpg is not in images/laxey-wheel/']);
+  } finally { await rm(dir, {recursive: true, force: true}); }
+
+  // The archive link must be a rendered link to a path the Worker accepts as a source.
+  for (const [text, ok] of [
+    ['See `[a](/read/IME/IME-1854-09-29/3)` in code.', false],
+    ['See [a](/read/zzz).', false],
+    ['See [a](/read/IME/IME-1854-09-29/3).', true],
+    ['See [a](/search?view=IME%2FIME-1854-09-29%2F0003%2Frecord%2F12).', true],
+    ['> Quoted [a](/read/IME/IME-1854-09-29/3).', true],
+  ]) assert.equal(checkPost('laxey-wheel', good('', text)).errors.some(e => /link at least one claim/.test(e)), !ok, text);
+
+  // Reserved keys are refused, never silently dropped or used as a prototype.
+  for (const key of ['__proto__', 'constructor', 'prototype'])
+    assert.throws(() => parsePost('---\n' + key + ': x\n---\n'), new RegExp(key + ' is not allowed'), key);
+  assert.throws(() => parsePost('---\nsources:\n  - __proto__: x\n---\n'), /__proto__ is not allowed/);
+  assert.throws(() => parsePost('---\nsources:\n  - url: /read/A/B/1\n    __proto__: x\n---\n'), /__proto__ is not allowed/);
+
+  // " #" in bare text must be quoted; a comment after a single token (as in the template) is fine.
+  assert.throws(() => parsePost('---\ntitle: Issue #5 report\n---\n'), /quote this value, it contains " #"/);
+  assert.throws(() => parsePost('---\ntitle: Issue # 5\n---\n'), /quote this value/);
+  assert.deepEqual(parsePost('---\ntitle: "Issue #5 report"\ndate: 2026-12-01   # listed from\nimage: wheel.jpg # share\nok: true # yes\n---\n').data,
+    {title: 'Issue #5 report', date: '2026-12-01', image: 'wheel.jpg', ok: true});
+  assert.equal(parsePost('---\ntitle: C#-style\n---\n').data.title, 'C#-style');
+
+  // Annotations escape %, CR and LF, so a file name cannot start a second workflow command line.
+  const source = await readFile(join(root, 'scripts/validate.mjs'), 'utf8');
+  assert.doesNotMatch(source, /console\.log\('::error::' \+ (?!String\(text\))/);
+  const annotate = new Function('console', source.match(/const annotate = ([^;]+);/)[1].replace(/^/, 'return ') + ';');
+  const lines = [];annotate({log: line => lines.push(line)})('posts/a\r\n::warning::x%.md');
+  assert.deepEqual(lines, ['::error::posts/a%0D%0A::warning::x%25.md']);
 });

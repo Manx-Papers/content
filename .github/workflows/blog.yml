@@ -6,6 +6,8 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
+    # Only content and the code that checks or publishes it; a README-only merge publishes nothing.
+    paths: ['posts/**', 'images/**', 'scripts/**', 'vendor/**', '.github/workflows/blog.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,4 +37,6 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          # Read-only, to check this commit is still main's tip (no rollback by re-running old runs).
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/publish.sh

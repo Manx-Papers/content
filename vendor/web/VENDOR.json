@@ -1,6 +1,8 @@
 {
   "source": "Manx-Papers/web",
   "commit": "b97ed641192f8feb2b1d441d63525d701dffc1f7",
+  "source_status": "Manx-Papers/web#179 head (draft, unmerged; base web#178). Re-vendor from web main, and update the commit and hashes, once web#178 and web#179 merge, before this repository publishes.",
+  "drift_guard": "web test/blog-vendor.test.mjs pins the same four hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all four together when web's src/blog.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
     "blog.mjs": "40bd63e5283fd34888c7cb95c72b8570e8940f43f14db6f1cac471ee761c99d4",

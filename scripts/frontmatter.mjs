@@ -1,7 +1,9 @@
 // A strict front-matter reader for blog posts: the small YAML subset the post template uses, with
 // no dependencies. Anything outside that subset is an error rather than a guess.
 //
-//   key: value            bare text (a trailing " # comment" is dropped), true/false → boolean
+//   key: value            bare text, true/false → boolean. A trailing " # comment" is allowed only
+//                         after a single token (a date, true/false, a /path or an image file name);
+//                         other bare text containing " #" must be quoted, so no text is lost.
 //   key: "text"           double quotes (\" and \\ escapes) or 'text' ('' for a quote)
 //   key: [a, "b c"]       inline list of scalars
 //   key:                  block list of scalars or of one-level maps:
@@ -10,6 +12,12 @@
 // Every value other than true/false stays a string (dates included), as the schema expects.
 
 const KEY = /^([a-z_][a-z0-9_]*):(?:\s+(.*))?$/;
+const RESERVED = new Set(['__proto__', 'constructor', 'prototype']);
+const TOKEN = /^(?:\d{4}-\d{2}-\d{2}|true|false|\/[^\s#]*|[A-Za-z0-9][A-Za-z0-9_-]*\.(?:jpg|jpeg|png|webp))$/;
+function keyName(key, where) {
+  if (RESERVED.has(key)) throw new Error(where + ': ' + key + ' is not allowed as a key');
+  return key;
+}
 
 function scalar(raw, where) {
   const text = raw.trim();
@@ -23,7 +31,9 @@ function scalar(raw, where) {
     if (!m) throw new Error(where + ': unterminated or invalid single-quoted text');
     return m[1].replaceAll("''", "'");
   }
-  const bare = text.replace(/\s+#.*$/, '');
+  const comment = /\s#/.exec(text);
+  const bare = comment ? text.slice(0, comment.index).trim() : text;
+  if (comment && !TOKEN.test(bare)) throw new Error(where + ': quote this value, it contains " #"');
   if (/^[[{&*!|>%@`]/.test(bare)) throw new Error(where + ': quote this value');
   if (bare === 'true') return true;
   if (bare === 'false') return false;
@@ -54,7 +64,7 @@ export function parsePost(source) {
     if (/^\s/.test(line)) throw new Error(where + ': unexpected indentation');
     const key = KEY.exec(line);
     if (!key) throw new Error(where + ': expected "key: value"');
-    const [, name, rest] = key;
+    const [, , rest] = key, name = keyName(key[1], where);
     if (Object.hasOwn(data, name)) throw new Error(where + ': duplicate key ' + name);
     if (rest !== undefined && rest.replace(/(?:^|\s+)#.*$/, '').trim() !== '') {
       data[name] = rest.trim().startsWith('[') ? inlineList(rest, where) : scalar(rest, where);
@@ -69,12 +79,12 @@ export function parsePost(source) {
       if (item) {
         const inner = KEY.exec(item[2]);
         if (inner && !/^["']/.test(item[2])) {
-          const entry = {[inner[1]]: scalar(inner[2] ?? '', at)};
+          const entry = {[keyName(inner[1], at)]: scalar(inner[2] ?? '', at)};
           const indent = item[1].length + 2;
           while (i + 1 < lines.length && new RegExp('^ {' + indent + '}[a-z_]').test(lines[i + 1])) {
             const field = KEY.exec(lines[++i].slice(indent));
             if (!field) throw new Error('line ' + (i + 2) + ': expected "key: value"');
-            if (Object.hasOwn(entry, field[1])) throw new Error('line ' + (i + 2) + ': duplicate key ' + field[1]);
+            if (Object.hasOwn(entry, keyName(field[1], 'line ' + (i + 2)))) throw new Error('line ' + (i + 2) + ': duplicate key ' + field[1]);
             entry[field[1]] = scalar(field[2] ?? '', 'line ' + (i + 2));
           }
           list.push(entry);

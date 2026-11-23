@@ -8,7 +8,13 @@ import {postMeta, SLUG} from '../vendor/web/blog.mjs';
 import {renderMarkdown, IMAGE_FILE} from '../vendor/web/markdown.mjs';
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const ARCHIVE_LINK = /\]\((?:\/read\/|\/search\?view=)[^)\s]+\)/;
+const unescapeHTML = text => text.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"})[e]);
+// An archive link is a rendered link (not text in a code span) to a path the Worker accepts as a
+// post source: a /read/ page or a /search?view= Article. postMeta is the Worker's own rule for that.
+const SOURCE_PROBE = {title: 'x', date: '2026-01-01', summary: 'x', slug: 'x'};
+export function archiveHref(href) {
+  try { postMeta({...SOURCE_PROBE, sources: [href]}); return true; } catch { return false; }
+}
 const MAGIC = {
   jpg: b => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
   png: b => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -30,10 +36,18 @@ export function checkPost(slug, source) {
   const raw = {...data, slug, body};
   try { postMeta(raw, {body: true}); } catch (error) { errors.push(error.message.replace(/^blog post [^:]+: /, 'front matter: ')); }
   if (!body.trim()) errors.push('the post has no text');
-  const {problems} = renderMarkdown(body, {slug});
+  // Links and figures are read from what the Worker's renderer actually emits, so every form it
+  // accepts (a bare file name, /blog/images/<slug>/<file>, inside a quote) is checked.
+  const {html, problems} = renderMarkdown(body, {slug});
   for (const problem of problems) errors.push('text: ' + problem);
-  if (!ARCHIVE_LINK.test(body)) errors.push('text: link at least one claim to the archive, e.g. [the report](/read/IME/IME-1854-09-29/3)');
-  const figures = [...body.matchAll(/^\s*!\[[^\]\n]*\]\(([^)\s]+)/gm)].map(m => m[1]).filter(src => IMAGE_FILE.test(src));
+  const hrefs = [...html.matchAll(/<a href="([^"]*)">/g)].map(m => unescapeHTML(m[1]));
+  if (!hrefs.some(archiveHref)) errors.push('text: link at least one claim to the archive, e.g. [the report](/read/IME/IME-1854-09-29/3)');
+  const figures = [];
+  for (const [, src] of html.matchAll(/<img src="([^"]*)"/g)) {
+    const m = /^\/blog\/images\/([^/]+)\/([^/]+)$/.exec(unescapeHTML(src));
+    if (m && m[1] === slug && IMAGE_FILE.test(m[2])) figures.push(m[2]);
+    else errors.push('text: image ' + unescapeHTML(src) + ' is not in images/' + slug + '/');
+  }
   return {post: errors.length ? null : raw, figures, errors};
 }
 

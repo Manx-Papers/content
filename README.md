@@ -10,8 +10,8 @@ no Beta step and no code release.
 2. **Check.** The pull request runs the same rules the website serves posts with:
    - the front matter must be valid;
    - the text must be safe;
-   - images must exist;
-   - at least one claim must link to the archive.
+   - every image the post shows must be in its folder;
+   - at least one claim must link to an archive page (`/read/…` or `/search?view=…`).
 3. **Review and merge.** The owner reviews the pull request and merges it. **Merging is publishing.**
 4. **Publish.** The workflow copies the posts to the content store, the R2 bucket `manxpapers-content`
    under `blog/`. The website reads that store on every request.
@@ -41,6 +41,7 @@ Nothing here holds or calls an AI provider.
   - headings from `##` (the title is the page's only top-level heading);
   - paragraphs, **bold**, *italic*, links, lists and `>` quotes;
   - an image on its own line: `![alt](file.jpg "caption")`.
+  - Quote any front-matter text that contains ` #`, for example `title: "Issue #5"`.
   - Raw HTML isn't allowed.
 
 ### Front matter
@@ -74,3 +75,14 @@ tests with `node --test tests/*.test.mjs`.
 1. copy all four again;
 2. update the commit and hashes;
 3. run the tests.
+
+Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
+until this copy is updated. The current copy is from web#179 (not yet merged); it is re-vendored from
+web `main` when the blog code merges there.
+
+## Publishing safeguards
+- `main` is protected: changes arrive only by pull request with the owner's approval and a passing
+  `content` check.
+- Only changes to posts, images or the publishing code start a publish run.
+- A run publishes only if its commit is still the tip of `main`. Re-running an old run, or a run
+  overtaken by a newer merge, publishes nothing, so the store is never rolled back.
