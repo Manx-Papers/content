@@ -33,6 +33,8 @@ Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F
 > A short quotation from the paper.
 
 A picture that isn't from the archive, such as a modern photo or a postcard, goes in `images/<file-name>/`
-with alt text and an optional caption. Newspaper clippings from the archive can't be used yet.
+with alt text and an optional caption. Newspaper clippings from the archive can't be used yet; when
+they arrive, each one gets short alt text (what it is, the paper and the date) and the site adds a
+"Read the text" section under it for screen readers.
 
 ![Alt text describing the image](laxey-wheel.jpg "Optional caption")

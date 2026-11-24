@@ -34,6 +34,16 @@ Nothing here holds or calls an AI provider.
     the first blog release (web#183).
   - Until then, archive images can't be used in posts: the check refuses `/media/…` images with a
     clear message.
+  - **Every clipping must work without seeing it.** Under each clipping the site shows a
+    "Read the text" section with the Article's text, which screen readers and anyone who finds old
+    print hard to read can open. The text comes from the archive automatically.
+    - The image's alt text is short: what it is, the paper and the date, for example
+      `Clipping: "Lifeboat called out in gale", Isle of Man Times, 12 March 1912`. Don't paste the
+      article into the alt text.
+    - Check the text the site shows. If the automatic reading has obvious mistakes, give a
+      corrected version with the clipping (the exact form arrives with web#183).
+    - A clipping that is mainly a picture, an advert or a photograph has little useful text. Give
+      it a fuller description of what it shows instead.
 - **Other pictures** (modern photos, postcards and so on) go in `images/<file-name>/`:
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text, and can have a caption.
