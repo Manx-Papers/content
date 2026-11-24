@@ -12,7 +12,8 @@ export const BLOG_SHELL = '/assets/blog-page.html';
 export const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_ZONE = 'Europe/Isle_of_Man';
-export const AI_NOTE = 'Researched with AI assistance, checked by the editor.';
+// Owner, 24 Nov: the owner reads posts but does not verify them, so the line claims no editorial check.
+export const AI_NOTE = 'Written with AI assistance.';
 export const FEED_SIZE = 20;
 const READ_PATH = /^\/read\/[A-Z][A-Z0-9]{1,11}\/[A-Za-z0-9_-]+\/\d{1,4}$/;
 // The site's own View Article URLs percent-encode the identifier (/search?view=IMT%2FIMT-…).
@@ -114,7 +115,7 @@ function headTags({title, description, url, image, imageAlt, type, published, up
   return [
     '<meta name="description" content="' + escapeHTML(description) + '" />',
     '<link rel="canonical" href="' + escapeHTML(url) + '" />',
-    '<link rel="alternate" type="application/rss+xml" title="Manx Papers blog" href="/blog/feed.xml" />',
+    '<link rel="alternate" type="application/rss+xml" title="' + FEED_TITLE + '" href="/blog/feed.xml" />',
     ...(noindex ? ['<meta name="robots" content="noindex, nofollow" />'] : []),
     '<meta property="og:site_name" content="Manx Papers" />',
     '<meta property="og:type" content="' + type + '" />',
@@ -131,6 +132,19 @@ function headTags({title, description, url, image, imageAlt, type, published, up
 }
 
 export const DEFAULT_IMAGE = '/assets/brand/social-card.png';
+// Owner, 24 Nov: the blog is "Stories from the Archive" (the address stays /blog).
+export const BLOG_NAME = 'Stories from the Archive';
+// The short name, as in the header link and the posts' breadcrumb.
+export const BLOG_LINK = 'Stories';
+const FEED_TITLE = 'Manx Papers: ' + BLOG_NAME;
+const BLOG_DESCRIPTION = 'Stories from the Manx Papers archive of Isle of Man newspapers.';
+// Owner's own words, 24 Nov: under the heading on the index and tag views, not on posts. Introductory
+// text in a plain div, not a landmark: an aside inside main fails axe landmark-complementary-is-top-level.
+export const BLOG_CALLOUT = '<div class="blog-callout">\n'
+  + '<p>Each story explores a single topic. It was written by AI, using the Manx Papers archive, with some background from other sources.</p>\n'
+  + "<p>Newspapers are contemporary, which is their advantage. But they can carry the mistakes and biases of their day, and our archive isn't complete, so these stories may contain errors and require verification and expansion.</p>\n"
+  + '<p>Want to explore your own topic? <a href="/connect-ai">Connect your AI assistant</a>.</p>\n'
+  + '</div>\n';
 const DEFAULT_IMAGE_ALT = 'Manx Papers: The Isle of Man in Print';
 
 // The listing, or with `tag` the posts carrying that tag (the spelling shown is the newest post's).
@@ -140,19 +154,19 @@ export function renderIndex(posts, origin, tag) {
     + '<h2 id="post-' + post.slug + '"><a class="blog-card-link" href="/blog/' + post.slug + '">' + escapeHTML(post.title) + '</a></h2>'
     + '<p class="blog-byline">' + timeTag(post.date) + '</p>'
     + '<p>' + escapeHTML(post.summary) + '</p>' + tagList(post.tags) + '</article></li>').join('');
-  const list = items ? '<ul class="blog-list" role="list">' + items + '</ul>' : '<p>There are no posts yet.</p>';
+  const list = items ? '<ul class="blog-list" role="list">' + items + '</ul>' : '<p>There are no stories yet.</p>';
   if (tag) return {
-    title: escapeHTML('Posts tagged ‘' + tag + '’'),
+    title: escapeHTML('Stories tagged ‘' + tag + '’'),
     // A filtered view of /blog: never indexed, and canonical to the blog itself.
-    head: headTags({title: 'Manx Papers blog: ' + tag, description: 'Manx Papers blog posts tagged ' + tag + '.',
+    head: headTags({title: 'Manx Papers: Stories tagged ' + tag, description: 'Manx Papers stories tagged ' + tag + '.',
       url: origin + '/blog', image: origin + DEFAULT_IMAGE, imageAlt: DEFAULT_IMAGE_ALT, type: 'website', noindex: true}),
-    content: '<h1>Posts tagged ‘' + escapeHTML(tag) + '’</h1>\n<p class="blog-intro"><a href="/blog">All posts</a></p>\n' + list,
+    content: '<h1>Stories tagged ‘' + escapeHTML(tag) + '’</h1>\n' + BLOG_CALLOUT + '<p class="blog-intro"><a href="/blog">All stories</a></p>\n' + list,
   };
   return {
-    title: 'Blog',
-    head: headTags({title: 'Manx Papers blog', description: 'Stories from the Manx Papers archive of Isle of Man newspapers.',
+    title: BLOG_NAME,
+    head: headTags({title: FEED_TITLE, description: BLOG_DESCRIPTION,
       url: origin + '/blog', image: origin + DEFAULT_IMAGE, imageAlt: DEFAULT_IMAGE_ALT, type: 'website'}),
-    content: '<h1>Blog</h1>\n<p class="blog-intro">Stories from the archive. Every post links to the newspaper pages it draws on. '
+    content: '<h1>' + BLOG_NAME + '</h1>\n' + BLOG_CALLOUT + '<p class="blog-intro">Every story links to the newspaper pages it draws on. '
       + '<a href="/blog/feed.xml">Follow by RSS</a>.</p>\n' + list,
   };
 }
@@ -166,12 +180,12 @@ export function renderPost(post, origin, day) {
     title: escapeHTML(post.title),
     head: headTags({title: post.title, description: post.summary, url: origin + '/blog/' + post.slug, image,
       imageAlt: post.image ? post.image_alt : DEFAULT_IMAGE_ALT, type: 'article', published: post.date, updated: post.updated, noindex: scheduled}),
-    content: '<div class="blog-post-nav">\n<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">Blog</a></nav>\n'
+    content: '<div class="blog-post-nav">\n<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">' + BLOG_LINK + '</a></nav>\n'
       + tagList(post.tags) + '</div>\n<article class="blog-post" aria-labelledby="post-title">\n<div class="blog-post-head">\n'
       + '<h1 id="post-title">' + escapeHTML(post.title) + '</h1>\n'
       + '<p class="blog-byline">By ' + escapeHTML(post.author) + ' · ' + timeTag(post.date)
       + (post.updated ? ' · Updated ' + timeTag(post.updated) : '') + '</p>\n'
-      + (scheduled ? '<p class="blog-scheduled" role="note">Scheduled: this post is not listed on the blog until ' + longDate(post.date) + '.</p>\n' : '')
+      + (scheduled ? '<p class="blog-scheduled" role="note">Scheduled: this post is not listed in ' + BLOG_NAME + ' until ' + longDate(post.date) + '.</p>\n' : '')
       + '</div>\n<div class="blog-body">\n' + html + '\n</div>\n<div class="blog-post-footer">\n'
       + (post.ai_assisted ? '<p class="blog-ai-note">' + AI_NOTE + '</p>\n' : '')
       + '<h2>Sources in the archive</h2>\n<ul class="blog-sources">' + sources + '</ul>\n</div>\n</article>',
@@ -184,7 +198,7 @@ export function renderFeed(posts, origin) {
     + '</link><guid isPermaLink="true">' + origin + '/blog/' + post.slug + '</guid><pubDate>' + rfc822(post.date)
     + '</pubDate><description>' + xml(post.summary) + '</description></item>').join('');
   return '<?xml version="1.0" encoding="utf-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>'
-    + '<title>Manx Papers blog</title><link>' + origin + '/blog</link><description>Stories from the Manx Papers archive of Isle of Man newspapers.</description>'
+    + '<title>' + FEED_TITLE + '</title><link>' + origin + '/blog</link><description>' + BLOG_DESCRIPTION + '</description>'
     + '<language>en-gb</language><atom:link href="' + origin + '/blog/feed.xml" rel="self" type="application/rss+xml"/>'
     + (posts[0] ? '<lastBuildDate>' + rfc822(posts[0].updated ?? posts[0].date) + '</lastBuildDate>' : '')
     + items + '</channel></rss>\n';
@@ -253,6 +267,6 @@ export async function handleBlog(request, env, {respond, page, now = new Date()}
     return send(await page(renderPost(post, origin, day)), 'text/html; charset=utf-8');
   } catch (error) {
     console.error('blog store: ' + (error?.message ?? error));
-    return respond('The blog is temporarily unavailable.', {status: 503, headers: {'Retry-After': '60'}});
+    return respond('Stories are temporarily unavailable.', {status: 503, headers: {'Retry-After': '60'}});
   }
 }

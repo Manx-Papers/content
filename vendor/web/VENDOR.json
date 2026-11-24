@@ -1,11 +1,11 @@
 {
   "source": "Manx-Papers/web",
-  "commit": "0b9d8046c03f2bcc3dc5c4a3276684642c27f28b",
-  "source_status": "Manx-Papers/web main 0b9d804 (web#181 merge), after web#179 (blog) and web#181 (Connect AI: sitemap lists /connect-ai) merged. Only blog.mjs differs from the earlier copy of web#179.",
+  "commit": "973d985ced35fe7d841755b5ffc1bacd52ea14a9",
+  "source_status": "Manx-Papers/web main 973d985 (web#185 merge: \"Stories from the Archive\", AI line \"Written with AI assistance.\"). Only blog.mjs differs from the 0b9d804 copy.",
   "drift_guard": "web test/blog-vendor.test.mjs pins the same four hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all four together when web's src/blog.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
-    "blog.mjs": "44450dfd47d628508ada4984e20a7b77bef85d5208d0e215ceeda8f1a21583ad",
+    "blog.mjs": "5fea345c8a7692b41ae12bd8131a783763168a1a7b566c1d969360523b035576",
     "markdown.mjs": "8f26b20727c804ae3f840f067f614bb981901a2f6836deb36c5f91b6f37a2735",
     "proxy.mjs": "df2d7d854b0441963ecd0f67f65bb8ec510f39610a91528a7b0f23d4f1bfb273",
     "security.mjs": "a1eb6d3902126ae86b78eed7003954f51731874f175d85e96efb741386c8a5e8"

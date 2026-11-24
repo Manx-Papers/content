@@ -67,7 +67,7 @@ Nothing here holds or calls an AI provider.
   ```
   Without a label, an Article shows its address and a page shows only "IME, 5 July 1946, page 1",
   not the headline, so the check warns about any entry without one.
-- **The AI line.** Posts show "Researched with AI assistance, checked by the editor." Set
+- **The AI line.** Posts show "Written with AI assistance." Set
   `ai_assisted: false` only for a post written without AI.
 - **Markdown** is plain:
   - headings from `##` (the title is the page's only top-level heading);

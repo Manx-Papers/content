@@ -10,7 +10,7 @@ summary: "One or two sentences for the blog index, search engines, link previews
 # tags: [industry, Laxey]                   # optional
 # author: "Manx Papers"                     # optional; this is the default
 # ai_assisted: false                        # only when no AI was used; the default shows
-#                                           # "Researched with AI assistance, checked by the editor."
+#                                           # "Written with AI assistance."
 # sources: the Articles the post relies on: paste each Article's copy-link address, with a label
 # "Paper, date: headline". A /read/ page only when the point is the whole page.
 sources:
