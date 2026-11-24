@@ -18,7 +18,7 @@ const READ_PATH = /^\/read\/[A-Z][A-Z0-9]{1,11}\/[A-Za-z0-9_-]+\/\d{1,4}$/;
 // The site's own View Article URLs percent-encode the identifier (/search?view=IMT%2FIMT-…).
 const VIEW_PATH = /^\/search\?view=(?:[A-Za-z0-9_:/-]|%2F|%3A)+$/i;
 // Core pages listed in the sitemap alongside visible posts.
-export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/use-ai', '/terms', '/privacy'];
+export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/connect-ai', '/terms', '/privacy'];
 
 // Tags become /blog?tag= links. A tag is words: letters, digits, hyphens, apostrophes, full stops and
 // &, separated by single spaces, starting with a letter or digit, at most 40 characters ("St. John's",

@@ -101,8 +101,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web#179 (not yet merged); it is re-vendored from
-web `main` when the blog code merges there.
+until this copy is updated. The current copy is from web `main` at `0b9d804`, after the blog (web#179)
+and Connect AI (web#181) merged.
 
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing
