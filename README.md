@@ -34,13 +34,13 @@ Nothing here holds or calls an AI provider.
     the first blog release (web#183).
   - Until then, archive images can't be used in posts: the check refuses `/media/…` images with a
     clear message.
-  - **Every clipping must work without seeing it.** Under each clipping the site shows a
+  - **Every clipping must work without seeing it.** Under each clipping the site will show a
     "Read the text" section with the Article's text, which screen readers and anyone who finds old
     print hard to read can open. The text comes from the archive automatically.
     - The image's alt text is short: what it is, the paper and the date, for example
       `Clipping: "Lifeboat called out in gale", Isle of Man Times, 12 March 1912`. Don't paste the
       article into the alt text.
-    - Check the text the site shows. If the automatic reading has obvious mistakes, give a
+    - Check the text the site will show. If the automatic reading has obvious mistakes, give a
       corrected version with the clipping (the exact form arrives with web#183).
     - A clipping that is mainly a picture, an advert or a photograph has little useful text. Give
       it a fuller description of what it shows instead.
@@ -111,8 +111,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `0b9d804`, after the blog (web#179)
-and Connect AI (web#181) merged.
+until this copy is updated. The current copy is from web `main` at `973d985`, the merge of web#185
+("Stories from the Archive" and the AI line "Written with AI assistance.").
 
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing
