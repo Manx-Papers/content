@@ -7,9 +7,10 @@
 // - / * / 1. lists, > quotes, --- rules, and a figure for an image alone on its line:
 // ![alt](src "optional caption"). Inline: `code`, [text](href), **strong**, *em* / _em_.
 //
-// web#183: a newspaper clipping from the archive is a figure line whose source is article:<Item ID>,
-// optionally with ?page=N to show that page of an Article on several pages:
-//   ![Halt sign summons](article:IMT/IMT-1938-10-08/0004/record/231 "Optional caption")
+// web#183 (owner, 25 Nov): a newspaper clipping is one section of a page, named by its section ID,
+// optionally with words or a "quoted phrase" to highlight, written as in a search address (+ for a
+// space, %22 or " for a quote mark):
+//   ![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000?highlight=rider+weds "Optional caption")
 // The alt text is the clipping's headline in a few words; the site adds the paper and date. The line
 // may be followed at once by a block that replaces the machine-read text in "Read the text":
 //   ::: text            (the author's corrected text)       ::: description   (for a picture)
@@ -34,17 +35,26 @@ export function imageSrc(src, slug) {
   return null;
 }
 
-// TITLE/ISSUE/PAGE/record/N, the issue starting with its title, page 0001-9999; optional ?page=N.
-const REFERENCE = /^article:([A-Z][A-Z0-9]{1,11})\/([A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)\/(\d{4})\/record\/(\d{1,7})(?:\?page=([1-9]\d{0,3}))?$/;
-export const MAX_CLIPPINGS = 12;
+// TITLE/ISSUE/PAGE/block/BLOCK, the issue starting with its title, page 0001-9999; optional
+// ?highlight=<words>, at most 120 characters once decoded: letters, digits, spaces, quote marks,
+// apostrophes, full stops, commas, hyphens and &.
+const REFERENCE = /^section:([A-Z][A-Z0-9]{1,11})\/([A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)\/(\d{4})\/block\/([A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)(?:\?highlight=([^?#&=\s]+))?$/;
+const HIGHLIGHT = /^[\p{L}\p{N}\p{M} "'’.,&-]{1,120}$/u;
+export const MAX_CLIPPINGS = 30;
 export const MAX_ALT = 200;
-// {id, page} for a valid clipping reference, or null.
+export const isClippingSource = src => /^(?:section|article):/.test(src);
+// {id, highlight} for a valid clipping reference, or null.
 export function parseReference(src) {
   const m = REFERENCE.exec(src ?? '');
   if (!m) return null;
-  const [, title, issue, page, record, chosen] = m;
-  if (issue.length > 64 || !(issue.startsWith(title + '-') || issue.startsWith(title + '_')) || page === '0000') return null;
-  return {id: title + '/' + issue + '/' + page + '/record/' + Number(record), page: chosen ? Number(chosen) : null};
+  const [, title, issue, page, block, raw] = m;
+  if (issue.length > 64 || block.length > 64 || !(issue.startsWith(title + '-') || issue.startsWith(title + '_')) || page === '0000') return null;
+  let highlight = null;
+  if (raw !== undefined) {
+    try { highlight = decodeURIComponent(raw.replace(/\+/g, ' ')).replace(/\s+/g, ' ').trim(); } catch { return null; }
+    if (!HIGHLIGHT.test(highlight) || !/[\p{L}\p{N}]/u.test(highlight)) return null;
+  }
+  return {id: title + '/' + issue + '/' + page + '/block/' + block, highlight};
 }
 
 // Emphasis on escaped text, so the only '<' present are tags made here. A span never contains its
@@ -106,7 +116,7 @@ export function renderMarkdown(source, {slug = '', nested = false} = {}) {
       const open = BLOCK_OPEN.exec(line.trim());
       if (open && following && !following.override) { block = {kind: open[1], lines: [], clip: following}; continue; }
       flush();
-      problems.push(open ? 'a ::: ' + open[1] + ' block must come straight after its article: clipping line' : 'unknown ::: block: ' + line.trim().slice(0, 40));
+      problems.push(open ? 'a ::: ' + open[1] + ' block must come straight after its section: clipping line' : 'unknown ::: block: ' + line.trim().slice(0, 40));
       continue;
     }
     if (/^\s*>/.test(line)) { flushParagraph(); flushList(); quote.push(line.replace(/^\s*>\s?/, '')); continue; }
@@ -120,10 +130,10 @@ export function renderMarkdown(source, {slug = '', nested = false} = {}) {
       const level = Math.max(2, m[1].length);
       html.push('<h' + level + '>' + inline(m[2], problems) + '</h' + level + '>');
     } else if (/^(?:-{3,}|\*{3,})$/.test(line.trim())) { flush(); html.push('<hr>'); }
-    else if ((m = FIGURE.exec(line.trim())) && m[2].startsWith('article:')) {
+    else if ((m = FIGURE.exec(line.trim())) && isClippingSource(m[2])) {
       flush();
       const reference = parseReference(m[2]), alt = m[1].trim();
-      if (!reference) problems.push('not an archive Item reference: ' + m[2] + ' (use article:TITLE/ISSUE/PAGE/record/N, as in a View Article link)');
+      if (!reference) problems.push('not an archive section reference: ' + m[2] + ' (use section:TITLE/ISSUE/PAGE/block/ID, as in a section\'s copy-link address, optionally ?highlight=word+word)');
       else if (nested) problems.push('clippings cannot go inside a quote: ' + m[2]);
       else if (!alt) problems.push('clipping needs alt text (its headline in a few words): ' + m[2]);
       else if (alt.length > MAX_ALT) problems.push('clipping alt text is longer than ' + MAX_ALT + ' characters: ' + m[2]);
@@ -137,7 +147,7 @@ export function renderMarkdown(source, {slug = '', nested = false} = {}) {
       flush();
       const src = imageSrc(m[2], slug);
       if (!src) problems.push(m[2].startsWith('/media/')
-        ? 'archive page images are not allowed in posts: show the Article as a clipping with ![headline](article:<Item ID>): ' + m[2]
+        ? 'archive page images are not allowed in posts: show a section as a clipping with ![headline](section:<section ID>): ' + m[2]
         : 'image not allowed: ' + m[2]);
       else if (!m[1].trim()) problems.push('image needs alt text: ' + m[2]);
       else html.push('<figure><img src="' + escapeHTML(src) + '" alt="' + escapeHTML(m[1].trim()) + '" loading="lazy" decoding="async">'

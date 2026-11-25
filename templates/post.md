@@ -32,14 +32,15 @@ Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F
 
 > A short quotation from the paper.
 
-A newspaper clipping names the Article: its headline in a few words, then `article:` and the Item ID
-(the part of the copy-link address after `/items/`). The site adds the paper and date, and a
-"Read the text" section under it. Correct that text, if it needs it, in a `::: text` block straight
-after the clipping (`::: description` for a picture); see the README.
+A newspaper clipping is one section of a page: its headline in a few words, then `section:` and the
+section ID (the part of the section's copy-link address after `/sections/`). Highlight words with
+`?highlight=word+word`, spelt as in the archive's "Read the text". The site adds the paper and date,
+and a "Read the text" section under it. Correct that text, if it needs it, in a `::: text` block
+straight after the clipping (`::: description` for a picture); see the README.
 
-![Halt sign summons](article:IMT/IMT-1938-10-08/0004/record/231 "Optional caption")
+![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000?highlight=rider+weds "Optional caption")
 ::: text
-HALT SIGN SUMMONS.
+CLUBMAN'S T.T. RIDER WEDS
 :::
 
 A picture that isn't from the archive, such as a modern photo or a postcard, goes in `images/<file-name>/`
