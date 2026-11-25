@@ -77,8 +77,8 @@ printed this photograph with a caption of its own.
   alt text.
 - "Read the text" opens with the highlighted words marked; the reception clipping shows the author's
   corrected text, and the wedding-group photograph shows a description.
-- The two clippings headlined "The wedding report" are told apart: their links are named "The
-  wedding report (1)" and "(2)", on the clipping itself and on its "Full page" link.
+- The two clippings headlined "The wedding report" are told apart: their links are read as
+  `Clipping: "The wedding report" (1)` and `(2)`. Captions have no links of their own.
 - The Harbour Master photograph shows "Printed caption:" with the paper's own caption, then
   "(read by machine)". It has no description, so it has no "Read the text".
 - The wedding clippings all come from one page, so that page image should load once.

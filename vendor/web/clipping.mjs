@@ -142,10 +142,7 @@ export function clippingLayout(doc, clip) {
       .map(s => itemText.slice(s.span[0], s.span[1])).join('\n\n')).join(' ') : '';
   const printedShort = cutText(printed, MAX_PRINTED);
   const citation = doc.citation ?? {};
-  const record = typeof section.item?.id === 'string' ? section.item.id : '';
-  const [title, issue] = clip.id.split('/');
   const date = citation.publication_date, pageNumber = Number(citation.page_number ?? doc.page_number);
-  const readIssue = date && issue === title + '-' + date ? date : issue;
   return {
     W, H, path, preview: preview !== path && isMediaPath(preview) ? preview : '', polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
     bands: bands(hits, itemText), printed: printedShort,
@@ -153,7 +150,6 @@ export function clippingLayout(doc, clip) {
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
     pageNumber: whole(pageNumber) ? pageNumber : null,
-    fullPage: whole(pageNumber) ? '/read/' + title + '/' + readIssue + '/' + pageNumber + (record ? '?unit=' + encodeURIComponent(record) : '') : '',
     text, spans,
   };
 }
@@ -246,20 +242,20 @@ function textHTML(clip, layout, name = clip.alt) {
 }
 
 // The caption comes straight after the clipping: the writer's caption, the paper's own printed
-// caption (a photograph's), then where it was printed with a link to the full page. The clipping
-// itself links to the whole Article, so the caption has no second link there (except in the
-// placeholder, which has no clipping). The paper and date are said here only, not in the alt text.
-// Its parts are separated by a space as well as by layout, so they read apart without the stylesheet
-// (reader mode, copied text). The printed caption is machine-read text, and says so.
+// caption (a photograph's), then where it was printed. The clipping itself links to the whole
+// Article, so the caption has no links (owner, 25 Nov: no full-size scan or full-page link), except
+// in the placeholder, which has no clipping and so links the Article here. The paper and date are
+// said here only, not in the alt text. Its parts are separated by a space as well as by layout, so
+// they read apart without the stylesheet (reader mode, copied text). The printed caption is
+// machine-read text, and says so.
 function captionHTML(clip, layout, name = clip.alt) {
-  const where = layout ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ') : '';
-  const links = layout
-    ? (layout.fullPage ? '<a href="' + escapeHTML(layout.fullPage) + '">Full page<span class="sr-only">: ' + escapeHTML(name) + '</span></a>' : '')
+  const source = layout
+    ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ')
     : '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(name) + '</span></a>';
   return '<figcaption>' + [clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '',
     layout?.printed ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed)
       + ' <span class="blog-clipping-machine">(read by machine)</span></span>' : '',
-    '<span class="blog-clipping-source">' + [where, links].filter(Boolean).join(' · ') + '</span>'].filter(Boolean).join(' ') + '</figcaption>';
+    source ? '<span class="blog-clipping-source">' + source + '</span>' : ''].filter(Boolean).join(' ') + '</figcaption>';
 }
 
 // A clipping is its figure (the clipping and its caption), then "Read the text". A figcaption must be
@@ -318,7 +314,8 @@ export async function renderClippings(html, clippings, env, {budget = BUDGET_MS,
     const layout = layouts[i], src = layout && (layout.preview || layout.path);
     const lazy = !pages.has(src);
     if (src) pages.add(src);
-    // Clippings sharing a headline get their links told apart: "Full page: Rider weds (2)".
+    // Clippings sharing a headline get their links told apart: Clipping: "Rider weds" (2), and
+    // the View article links of a long text or a placeholder.
     seen.set(clip.alt, (seen.get(clip.alt) ?? 0) + 1);
     const name = alts.get(clip.alt) > 1 ? clip.alt + ' (' + seen.get(clip.alt) + ')' : clip.alt;
     return clippingHTML(clip, layout, i + 1, {lazy, name});
