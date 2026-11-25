@@ -195,9 +195,9 @@ test('review fixes: rendered figures and archive links, reserved keys, # in bare
     assert.deepEqual((await validate(dir)).errors, ['posts/laxey-wheel.md: image one.jpg is not in images/laxey-wheel/']);
   } finally { await rm(dir, {recursive: true, force: true}); }
 
-  // Archive page images are refused for now, with a clear reason (image rights are still open).
-  assert.ok(checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Page 3](/media/page/IME/IME-1854-09-29/0003.jpg)')).errors
-    .includes("text: archive page images (/media/page/IME/IME-1854-09-29/0003.jpg) aren't allowed in posts yet; use an image in images/laxey-wheel/"));
+  // Archive page images are refused by the Worker's renderer, which points to article: clippings (web#183).
+  assert.deepEqual(checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Page 3](/media/page/IME/IME-1854-09-29/0003.jpg)')).errors,
+    ['text: archive page images are not allowed in posts: show the Article as a clipping with ![headline](article:<Item ID>): /media/page/IME/IME-1854-09-29/0003.jpg']);
 
   // The archive link must be a rendered link to a path the Worker accepts as a source.
   for (const [text, ok] of [
@@ -245,4 +245,33 @@ test('a source without a label is a warning, not an error; the template has none
     assert.deepEqual(result.errors, []);
     assert.deepEqual(result.warnings, ['posts/laxey-wheel.md: ' + bare.warnings[0]]);
   } finally { await rm(dir, {recursive: true, force: true}); }
+});
+
+test('web#183: archive clippings name an Item; the check refuses what the Worker would leave out', () => {
+  const id = 'IMT/IMT-1938-10-08/0004/record/231';
+  const ok = checkPost('laxey-wheel', good('', [
+    '[a](/read/IME/IME-1854-09-29/3)', '',
+    '![Halt sign summons](article:' + id + ' "A motorist is fined.")', '::: text', 'HALT SIGN SUMMONS.', '', 'A motorist was *fined*.', ':::', '',
+    '![Second part](article:' + id + '?page=4)', '',
+    '![Lifeboat Day](article:IMT/IMT-1957-08-09/0007/record/101)', '::: description', 'The lifeboat is launched.', ':::',
+  ].join('\n')));
+  assert.deepEqual(ok.errors, []);
+  assert.deepEqual(ok.figures, [], 'nothing to find in images/');
+  // A pasted copy-link address after article: is stored as the Item ID; a section address is not a clipping.
+  for (const pasted of ['https://beta.manxpapers.com/items/' + id, 'https://manxpapers.com/items/' + id, '/items/' + id]) {
+    const result = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Halt](article:' + pasted + '?page=4)'));
+    assert.deepEqual(result.errors, [], pasted);
+    assert.match(result.post.body, new RegExp('\\]\\(article:' + id + '\\?page=4\\)\\n?$'), pasted);
+  }
+  for (const [line, error] of [
+    ['![Halt](article:https://beta.manxpapers.com/sections/IMT/IMT-1938-10-08/0004/block/R00231-B001)', /^text: not an archive Item reference/],
+    ['![Halt](article:IMT/IME-1938-10-08/0004/record/231)', /^text: not an archive Item reference/],
+    ['![](article:' + id + ')', /^text: clipping needs alt text/],
+    ['> ![Halt](article:' + id + ')', /^text: clippings cannot go inside a quote/],
+    ['![Halt](article:' + id + ')\n::: text\nnot closed', /^text: the ::: text block has no closing :::/],
+    ['::: description\nStray.\n:::', /^text: a ::: description block must come straight after its article: clipping line/],
+  ]) {
+    const {errors} = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n' + line));
+    assert.ok(errors.some(e => error.test(e)), line + ' → ' + JSON.stringify(errors));
+  }
 });

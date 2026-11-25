@@ -28,7 +28,10 @@ export function sitePath(url) {
 }
 // The same for link and image targets in the text: ](https://beta.manxpapers.com/…) and ](/items/…).
 const BODY_LINK = /\]\((https:\/\/(?:beta\.|www\.)?manxpapers\.com\/[^\s)]*|\/(?:items|sections)\/[A-Za-z0-9_/-]+)(?=[\s)])/g;
-export const bodyPaths = body => body.replace(BODY_LINK, (_, url) => '](' + sitePath(url));
+// web#183: a clipping names its Item after article:. The Article's copy-link address pasted there
+// (article:https://beta.manxpapers.com/items/<id>, or article:/items/<id>) is stored as article:<id>.
+const CLIPPING_LINK = /\]\(article:(?:https:\/\/(?:beta\.|www\.)?manxpapers\.com)?\/items\/([A-Za-z0-9_/-]+)(?=[\s)?])/g;
+export const bodyPaths = body => body.replace(BODY_LINK, (_, url) => '](' + sitePath(url)).replace(CLIPPING_LINK, '](article:$1');
 const MAGIC = {
   jpg: b => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
   png: b => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -71,8 +74,8 @@ export function checkPost(slug, source) {
   for (const [, src] of html.matchAll(/<img src="([^"]*)"/g)) {
     const m = /^\/blog\/images\/([^/]+)\/([^/]+)$/.exec(unescapeHTML(src));
     if (m && m[1] === slug && IMAGE_FILE.test(m[2])) figures.push(m[2]);
-    // The Worker can show archive page images, but their reuse rights are still open (Control #244).
-    else if (unescapeHTML(src).startsWith('/media/')) errors.push('text: archive page images (' + unescapeHTML(src) + ") aren't allowed in posts yet; use an image in images/" + slug + '/');
+    // Archive page images (/media/…) never get this far: the renderer refuses them and points to
+    // article: clippings (web#183), which the Worker draws from the archive and nothing here stores.
     else errors.push('text: image ' + unescapeHTML(src) + ' is not in images/' + slug + '/');
   }
   return {post: errors.length ? null : raw, figures, errors, warnings};

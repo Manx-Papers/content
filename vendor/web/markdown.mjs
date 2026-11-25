@@ -6,7 +6,17 @@
 // Blocks: ## to #### headings (a single # becomes ##: the page title is the only h1), paragraphs,
 // - / * / 1. lists, > quotes, --- rules, and a figure for an image alone on its line:
 // ![alt](src "optional caption"). Inline: `code`, [text](href), **strong**, *em* / _em_.
-import {isMediaPath} from './proxy.mjs';
+//
+// web#183: a newspaper clipping from the archive is a figure line whose source is article:<Item ID>,
+// optionally with ?page=N to show that page of an Article on several pages:
+//   ![Halt sign summons](article:IMT/IMT-1938-10-08/0004/record/231 "Optional caption")
+// The alt text is the clipping's headline in a few words; the site adds the paper and date. The line
+// may be followed at once by a block that replaces the machine-read text in "Read the text":
+//   ::: text            (the author's corrected text)       ::: description   (for a picture)
+//   ...paragraphs...                                          ...paragraphs...
+//   :::                                                       :::
+// The renderer leaves a <!--clipping:N--> marker (source '<' is always escaped, so only this code
+// makes one) and returns the clippings; blog.mjs fills them in from the archive (clipping.mjs).
 
 export const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 
@@ -21,8 +31,20 @@ export function imageSrc(src, slug) {
   if (IMAGE_FILE.test(src)) return '/blog/images/' + slug + '/' + src;
   const own = /^\/blog\/images\/([a-z0-9-]+)\/([^/]+)$/.exec(src);
   if (own && own[1] === slug && IMAGE_FILE.test(own[2])) return src;
-  if (src.startsWith('/media/') && isMediaPath(src)) return src;
   return null;
+}
+
+// TITLE/ISSUE/PAGE/record/N, the issue starting with its title, page 0001-9999; optional ?page=N.
+const REFERENCE = /^article:([A-Z][A-Z0-9]{1,11})\/([A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)\/(\d{4})\/record\/(\d{1,7})(?:\?page=([1-9]\d{0,3}))?$/;
+export const MAX_CLIPPINGS = 12;
+export const MAX_ALT = 200;
+// {id, page} for a valid clipping reference, or null.
+export function parseReference(src) {
+  const m = REFERENCE.exec(src ?? '');
+  if (!m) return null;
+  const [, title, issue, page, record, chosen] = m;
+  if (issue.length > 64 || !(issue.startsWith(title + '-') || issue.startsWith(title + '_')) || page === '0000') return null;
+  return {id: title + '/' + issue + '/' + page + '/record/' + Number(record), page: chosen ? Number(chosen) : null};
 }
 
 // Emphasis on escaped text, so the only '<' present are tags made here. A span never contains its
@@ -52,8 +74,10 @@ export function inline(text, problems = []) {
 }
 
 const FIGURE = /^!\[([^\]\n]*)\]\(([^)\s]+)(?:\s+"([^"\n]*)")?\)$/;
-export function renderMarkdown(source, {slug = ''} = {}) {
-  const problems = [];
+const BLOCK_OPEN = /^:::\s*(text|description)$/;
+export function renderMarkdown(source, {slug = '', nested = false} = {}) {
+  const problems = [], clippings = [];
+  let block = null, lastClipping = null;
   const lines = String(source).replace(/\r\n?/g, '\n').split('\n');
   const html = [];
   let paragraph = [], list = null, quote = [];
@@ -61,14 +85,30 @@ export function renderMarkdown(source, {slug = ''} = {}) {
   const flushList = () => { if (list) html.push('<' + list.tag + '>' + list.items.map(i => '<li>' + inline(i, problems) + '</li>').join('') + '</' + list.tag + '>'); list = null; };
   const flushQuote = () => {
     if (!quote.length) return;
-    const nested = renderMarkdown(quote.join('\n'), {slug});
-    problems.push(...nested.problems);
-    html.push('<blockquote>' + nested.html + '</blockquote>');
+    const inner = renderMarkdown(quote.join('\n'), {slug, nested: true});
+    problems.push(...inner.problems);
+    html.push('<blockquote>' + inner.html + '</blockquote>');
     quote = [];
   };
   const flush = () => { flushParagraph(); flushList(); flushQuote(); };
+  const closeBlock = () => {
+    const paragraphs = block.lines.join('\n').split(/\n\s*\n/).map(p => p.trim().replace(/\s*\n\s*/g, ' ')).filter(Boolean);
+    if (!paragraphs.length) problems.push('the ::: ' + block.kind + ' block is empty');
+    else block.clip.override = {kind: block.kind, html: paragraphs.map(p => '<p>' + inline(p, problems) + '</p>').join('')};
+    block = null;
+  };
   for (const raw of lines) {
     const line = raw.trimEnd();
+    const following = lastClipping;
+    lastClipping = null;
+    if (block) { if (line.trim() === ':::') closeBlock(); else block.lines.push(line); continue; }
+    if (/^:::/.test(line.trim())) {
+      const open = BLOCK_OPEN.exec(line.trim());
+      if (open && following && !following.override) { block = {kind: open[1], lines: [], clip: following}; continue; }
+      flush();
+      problems.push(open ? 'a ::: ' + open[1] + ' block must come straight after its article: clipping line' : 'unknown ::: block: ' + line.trim().slice(0, 40));
+      continue;
+    }
     if (/^\s*>/.test(line)) { flushParagraph(); flushList(); quote.push(line.replace(/^\s*>\s?/, '')); continue; }
     flushQuote();
     if (!line.trim()) { flush(); continue; }
@@ -80,10 +120,25 @@ export function renderMarkdown(source, {slug = ''} = {}) {
       const level = Math.max(2, m[1].length);
       html.push('<h' + level + '>' + inline(m[2], problems) + '</h' + level + '>');
     } else if (/^(?:-{3,}|\*{3,})$/.test(line.trim())) { flush(); html.push('<hr>'); }
-    else if ((m = FIGURE.exec(line.trim()))) {
+    else if ((m = FIGURE.exec(line.trim())) && m[2].startsWith('article:')) {
+      flush();
+      const reference = parseReference(m[2]), alt = m[1].trim();
+      if (!reference) problems.push('not an archive Item reference: ' + m[2] + ' (use article:TITLE/ISSUE/PAGE/record/N, as in a View Article link)');
+      else if (nested) problems.push('clippings cannot go inside a quote: ' + m[2]);
+      else if (!alt) problems.push('clipping needs alt text (its headline in a few words): ' + m[2]);
+      else if (alt.length > MAX_ALT) problems.push('clipping alt text is longer than ' + MAX_ALT + ' characters: ' + m[2]);
+      else if (clippings.length >= MAX_CLIPPINGS) problems.push('at most ' + MAX_CLIPPINGS + ' clippings in a post: ' + m[2]);
+      else {
+        lastClipping = {...reference, alt, caption: m[3] ? inline(m[3], problems) : ''};
+        html.push('<!--clipping:' + clippings.length + '-->');
+        clippings.push(lastClipping);
+      }
+    } else if ((m = FIGURE.exec(line.trim()))) {
       flush();
       const src = imageSrc(m[2], slug);
-      if (!src) problems.push('image not allowed: ' + m[2]);
+      if (!src) problems.push(m[2].startsWith('/media/')
+        ? 'archive page images are not allowed in posts: show the Article as a clipping with ![headline](article:<Item ID>): ' + m[2]
+        : 'image not allowed: ' + m[2]);
       else if (!m[1].trim()) problems.push('image needs alt text: ' + m[2]);
       else html.push('<figure><img src="' + escapeHTML(src) + '" alt="' + escapeHTML(m[1].trim()) + '" loading="lazy" decoding="async">'
         + (m[3] ? '<figcaption>' + inline(m[3], problems) + '</figcaption>' : '') + '</figure>');
@@ -96,6 +151,7 @@ export function renderMarkdown(source, {slug = ''} = {}) {
     } else if (list && /^\s{2,}\S/.test(raw)) list.items[list.items.length - 1] += ' ' + line.trim();
     else { flushList(); paragraph.push(line.trim()); }
   }
+  if (block) { problems.push('the ::: ' + block.kind + ' block has no closing :::'); closeBlock(); }
   flush();
-  return {html: html.join('\n'), problems};
+  return {html: html.join('\n'), problems, clippings};
 }

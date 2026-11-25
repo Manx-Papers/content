@@ -33,22 +33,47 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
   the post's address:
   - it uses lower-case words joined by hyphens, for example `posts/laxey-wheel.md` → `/blog/laxey-wheel`;
   - don't rename a post once it's published.
-- **Pictures from the archive.** The owner has decided that posts can show newspaper clippings from
-  the archive; showing them is the main reason for the blog.
-  - Clippings will be embedded by naming the Article, without copying any files. That arrives after
-    the first blog release (web#183).
-  - Until then, archive images can't be used in posts: the check refuses `/media/…` images with a
-    clear message.
-  - **Every clipping must work without seeing it.** Under each clipping the site will show a
-    "Read the text" section with the Article's text, which screen readers and anyone who finds old
-    print hard to read can open. The text comes from the archive automatically.
-    - The image's alt text is short: what it is, the paper and the date, for example
-      `Clipping: "Lifeboat called out in gale", Isle of Man Times, 12 March 1912`. Don't paste the
-      article into the alt text.
-    - Check the text the site will show. If the automatic reading has obvious mistakes, give a
-      corrected version with the clipping (the exact form arrives with web#183).
+- **Clippings from the archive.** Posts show newspaper clippings by naming the Article; showing them
+  is the main reason for the blog. Nothing is copied: the site draws the clipping from the page scan
+  each time the post is read (web#183).
+  - Put the clipping on a line of its own: `![` + its headline in a few words + `](article:` + the
+    Item ID + `)`, with an optional caption in quotes:
+
+    ```markdown
+    ![Halt sign summons](article:IMT/IMT-1938-10-08/0004/record/231 "A motorist is fined.")
+    ```
+
+  - The Item ID is the part of the Article's copy-link address after `/items/`. Pasting the whole
+    address after `article:` also works; the check stores it as the Item ID.
+  - The site shows only the Article's own blocks, masked from the page, so nothing from the stories
+    around it shows. A story that continues at the top of the next column is shown as its pieces,
+    one under another, in reading order.
+  - An Article on two or more pages shows its first part. Add `?page=N` to show another page, for
+    example `article:IMT/IMT-1938-10-08/0004/record/231?page=4`.
+  - A picture (a Picture Item) shows the picture and its caption only, not the article beside it.
+  - Up to 12 clippings a post; not inside a `>` quote. Archive page images (`/media/…`) are refused:
+    use a clipping.
+  - **Every clipping must work without seeing it.** The site adds the paper and date to the alt
+    text, for example `Clipping: "Halt sign summons", Isle of Man Times, 8 October 1938`, so give
+    only the headline. Don't paste the article into it. Under the clipping the site shows "Read the
+    text", the Article's text from the archive, for screen readers and anyone who finds old print
+    hard to read.
+    - Check that text on the preview. If the automatic reading has obvious mistakes, give a
+      corrected version straight after the clipping line, between `::: text` and `:::`:
+
+      ```markdown
+      ![Halt sign summons](article:IMT/IMT-1938-10-08/0004/record/231)
+      ::: text
+      HALT SIGN SUMMONS.
+
+      A motorist's explanation that he did not see a "halt" sign…
+      :::
+      ```
+
     - A clipping that is mainly a picture, an advert or a photograph has little useful text. Give
-      it a fuller description of what it shows instead.
+      a fuller description of what it shows instead, between `::: description` and `:::`.
+    - If the archive can't be reached when the post is read, the site says the clipping can't be
+      shown just now and keeps the caption, a View article link and any text you gave.
 - **Other pictures** (modern photos, postcards and so on) go in `images/<file-name>/`:
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text, and can have a caption.
@@ -108,16 +133,16 @@ tests with `node --test tests/*.test.mjs`.
 - **The website side** is web's `BLOG` R2 binding to the same bucket (read-only use).
 
 ## The rules are the website's own
-`vendor/web/` holds unchanged copies of the Web Worker's `blog.mjs`, `markdown.mjs`, `proxy.mjs` and
-`security.mjs`, pinned by hash in `vendor/web/VENDOR.json`. When those change in
+`vendor/web/` holds unchanged copies of the Web Worker's `blog.mjs`, `clipping.mjs`, `markdown.mjs`,
+`proxy.mjs` and `security.mjs`, pinned by hash in `vendor/web/VENDOR.json`. When those change in
 `Manx-Papers/web`:
-1. copy all four again;
+1. copy all five again;
 2. update the commit and hashes;
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `973d985`, the merge of web#185
-("Stories from the Archive" and the AI line "Written with AI assistance.").
+until this copy is updated. The current copy is from web `ac717e3`, the head of web#188 (archive
+clippings, web#183); it becomes web `main` when that pull request merges.
 
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing
