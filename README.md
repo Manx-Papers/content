@@ -36,10 +36,10 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
 - **Clippings from the archive.** Showing newspaper clippings is the main reason for the blog. Nothing
   is copied: the site draws each clipping from the page scan every time the post is read (web#183).
   - **Show what a paper said with a highlighted clipping, not a quote** (owner, 25 Nov): clip the
-    section and highlight the key words (below). Quote the text only when no clipping can do it:
-    the section was read too badly to highlight, the words run across several sections, the post
-    already has 30 clippings, or it's a few words woven into a sentence. Quotes stay short and
-    exact.
+    section and highlight the key words (below). If the section was read too badly to highlight,
+    still clip it, without a highlight, and give the corrected text in `::: text` (below). Quote the
+    text only when no clipping can do it: the words run across several sections, the post already
+    has 30 clippings, or it's a few words woven into a sentence. Quotes stay short and exact.
   - **A clipping is one section of a page** (a headline, a paragraph, a photograph), not a whole
     Article. Build the story from the sections you want: the headline, then a key paragraph, then
     the photo. Each shows exactly that section's outline, so nothing from the stories around it
