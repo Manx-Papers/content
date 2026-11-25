@@ -8,14 +8,15 @@ You're writing a blog post for Manx Papers, the archive of historic Isle of Man 
 - The story must come from the archive: every fact about what happened must come from an Article you have actually read. Never invent quotes, names, dates or numbers.
 - You may add short background context from other sources, such as what else was happening at the time or what became of something later. Make it clear in the text that it isn't from the papers ("Records elsewhere show…"), and list those sources in your notes to me.
 - OCR text can be wrong. Where a name, figure or date matters, check it against the page image. If you still aren't sure, mention it in your notes to me (see "What to give me").
-- Keep quotations short, a sentence or two, and quote them exactly as printed.
+- Keep quotations short, a sentence or two, and quote them exactly as printed. (Prefer a highlighted clipping to a quotation: see "How to write it".)
 
 ## How to write it
 - Write in British English, in a warm, plain style for a general reader with an interest in Manx history. Open with the story, not with "In this post…".
 - Use `##` headings only if the post is long enough to need them. Never use a single `#` heading, because the title is the page's only top-level heading.
 - Use plain Markdown only: paragraphs, **bold**, *italic*, links, lists and `>` quotes. No HTML, no tables and no footnotes.
 - **Link every factual claim to the Article it comes from**, as a site-relative link with no web address in front: `/items/<Item ID>`, for example `[the Examiner reported](/items/IME/IME-1946-07-05/0001/record/172)`. Link the Article, not the page. Use a page link (`/read/<paper>/<paper>-<date>/<page number>`) only when the point is the whole page.
-- **Illustrate the post with newspaper clippings from the archive.** A clipping is one *section* of a page, such as a headline, a paragraph, a photograph or an advert, not a whole Article. Choose the sections that best show the story, for example an Article's headline, then its key paragraph, then its photograph, and aim for one every few paragraphs. Clicking a clipping opens the whole Article, so readers can always read on.
+- **Show the papers' own words with clippings from the archive.** A clipping is one *section* of a page, such as a headline, a paragraph, a photograph or an advert, not a whole Article. Choose the sections that best show the story, for example an Article's headline, then its key paragraph, then its photograph, and aim for one every few paragraphs. Clicking a clipping opens the whole Article, so readers can always read on.
+  - **To show what a paper said, clip the section and highlight the key words or phrase**, rather than quoting the text in a `>` quote or in quotation marks. Quote instead only when no clipping can do it: the section's text was read too badly to highlight, the words run across several sections, the post already has 30 clippings, or it's just a few words woven into your own sentence.
   - Find section IDs with the connector. `get_article` lists an Article's sections in reading order (`display_order`, each with a `section_id` such as `IMT/IMT-1954-04-24/0006/block/R00100-B000`), and `get_section` shows one section's exact text.
   - Put each clipping on its own line where it belongs in the story, in this form:
     `![Headline in a few words](section:<section ID> "A one-line caption saying why it matters")`
