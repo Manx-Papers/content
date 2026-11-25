@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {parsePost} from '../scripts/frontmatter.mjs';
-import {checkPost, validate, build} from '../scripts/content.mjs';
+import {checkPost, checkClippings, validate, build} from '../scripts/content.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]);
@@ -155,12 +155,20 @@ test('publishing order: images and posts, then the index, then deletion, only un
     assert.doesNotMatch(r.stdout + r.stderr, /very-secret-value/);
     const endpoint = 's3 --endpoint-url https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com --only-show-errors ';
     const steps = (await calls()).map(line => line.replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, 'OUT')).map(c => { assert.ok(c.startsWith(endpoint), c); return c.slice(endpoint.length); });
-    // This repository has no images yet, so the image sync is skipped.
-    assert.equal(steps.length, 3, steps.join('\n'));
-    assert.match(steps[0], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
-    assert.match(steps[1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
-    assert.match(steps[2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
-    assert.match(r.stdout, /Published 0 post\(s\) and 0 image\(s\) to manxpapers-content\/blog\//);
+    // Include the image sync whenever the checked-out repository contains post images.
+    const imageDir = join(root, 'images');
+    const folders = (await readdir(imageDir, {withFileTypes: true})).filter(e => e.isDirectory());
+    let imageCount = 0;
+    for (const folder of folders) imageCount += (await readdir(join(imageDir, folder.name))).filter(n => /\.(?:jpg|jpeg|png|webp)$/.test(n)).length;
+    const hasImages = imageCount > 0;
+    const offset = hasImages ? 1 : 0;
+    assert.equal(steps.length, 3 + offset, steps.join('\n'));
+    if (hasImages) assert.match(steps[0], /^sync OUT\/blog\/images s3:\/\/manxpapers-content\/blog\/images$/);
+    assert.match(steps[offset], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
+    assert.match(steps[offset + 1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
+    assert.match(steps[offset + 2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
+    const postCount = (await readdir(join(root, 'posts'))).filter(f => f.endsWith('.md')).length;
+    assert.match(r.stdout, new RegExp('Published ' + postCount + ' post\\(s\\) and ' + imageCount + ' image\\(s\\) to manxpapers-content/blog/'));
     await rm(log, {force: true});
 
     // A run whose commit is no longer main's tip (re-run of an old run, or overtaken) publishes nothing.
@@ -182,7 +190,7 @@ test('publishing order: images and posts, then the index, then deletion, only un
     const plain = run({PATH: shadow.replaceAll('\\', '/').replace(/^([A-Za-z]):/, (_, d) => '/' + d.toLowerCase()) + ':' + process.env.PATH});
     assert.equal(plain.status, 0, plain.stdout + plain.stderr);
     assert.deepEqual(await calls(), [], 'AWS_CLI ignored outside the harness');
-    assert.equal((await readFile(log + '.path', 'utf8')).trim().split('\n').length, 3, 'the aws on PATH ran instead');
+    assert.equal((await readFile(log + '.path', 'utf8')).trim().split('\n').length, 3 + offset, 'the aws on PATH ran instead');
   } finally { await rm(bin, {recursive: true, force: true}); }
 });
 
@@ -195,9 +203,9 @@ test('review fixes: rendered figures and archive links, reserved keys, # in bare
     assert.deepEqual((await validate(dir)).errors, ['posts/laxey-wheel.md: image one.jpg is not in images/laxey-wheel/']);
   } finally { await rm(dir, {recursive: true, force: true}); }
 
-  // Archive page images are refused for now, with a clear reason (image rights are still open).
-  assert.ok(checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Page 3](/media/page/IME/IME-1854-09-29/0003.jpg)')).errors
-    .includes("text: archive page images (/media/page/IME/IME-1854-09-29/0003.jpg) aren't allowed in posts yet; use an image in images/laxey-wheel/"));
+  // Archive page images are refused by the Worker's renderer, which points to section: clippings (web#183).
+  assert.deepEqual(checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Page 3](/media/page/IME/IME-1854-09-29/0003.jpg)')).errors,
+    ['text: archive page images are not allowed in posts: show a section as a clipping with ![headline](section:<section ID>): /media/page/IME/IME-1854-09-29/0003.jpg']);
 
   // The archive link must be a rendered link to a path the Worker accepts as a source.
   for (const [text, ok] of [
@@ -245,4 +253,121 @@ test('a source without a label is a warning, not an error; the template has none
     assert.deepEqual(result.errors, []);
     assert.deepEqual(result.warnings, ['posts/laxey-wheel.md: ' + bare.warnings[0]]);
   } finally { await rm(dir, {recursive: true, force: true}); }
+});
+
+test('web#183: a clipping is one archive section; the check refuses what the Worker would leave out', () => {
+  const S = 'IMT/IMT-1954-04-24/0006/block/';
+  const ok = checkPost('laxey-wheel', good('', [
+    '[a](/read/IME/IME-1854-09-29/3)', '',
+    "![Clubman's T.T. rider weds](section:" + S + 'R00100-B000?highlight=rider+weds "A T.T. rider marries.")', '',
+    '![The couple](section:' + S + 'R00101-B000)', '::: description', 'The bride and groom outside the church.', ':::', '',
+    '![The wedding](section:' + S + 'R00100-B001)', '::: text', 'Gwilym Owen was *married* at Kirk Braddan.', ':::', '',
+    '![The service](section:' + S + 'R00245-B000?highlight="Rev.+B.+Kelly")',
+  ].join('\n')));
+  assert.deepEqual(ok.errors, []);
+  assert.deepEqual(ok.figures, [], 'nothing to find in images/');
+  assert.deepEqual(ok.clippings.map(c => [c.id, c.highlight]), [
+    [S + 'R00100-B000', 'rider weds'], [S + 'R00101-B000', null], [S + 'R00100-B001', null], [S + 'R00245-B000', '"Rev. B. Kelly"']]);
+  // A pasted copy-link address after section: is stored as the section ID.
+  for (const pasted of ['https://beta.manxpapers.com/sections/' + S + 'R00100-B000', 'https://manxpapers.com/sections/' + S + 'R00100-B000', '/sections/' + S + 'R00100-B000']) {
+    const result = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Rider weds](section:' + pasted + '?highlight=rider)'));
+    assert.deepEqual(result.errors, [], pasted);
+    assert.match(result.post.body, new RegExp('\\]\\(section:' + S + 'R00100-B000\\?highlight=rider\\)\\n?$'), pasted);
+  }
+  for (const [line, error] of [
+    ['![Halt](article:IMT/IMT-1938-10-08/0004/record/231)', /^text: not an archive section reference/],
+    ['![Halt](section:https://beta.manxpapers.com/items/IMT/IMT-1938-10-08/0004/record/231)', /^text: not an archive section reference/],
+    ['![Halt](section:IMT/IME-1954-04-24/0006/block/R00100-B000)', /^text: not an archive section reference/],
+    ['![Halt](section:' + S + 'R00100-B000?highlight=<b>)', /^text: not an archive section reference/],
+    ['![](section:' + S + 'R00100-B000)', /^text: clipping needs alt text/],
+    ['> ![Halt](section:' + S + 'R00100-B000)', /^text: clippings cannot go inside a quote/],
+    ['![Halt](section:' + S + 'R00100-B000)\n::: text\nnot closed', /^text: the ::: text block has no closing :::/],
+    ['::: description\nStray.\n:::', /^text: a ::: description block must come straight after its section: clipping line/],
+  ]) {
+    const {errors} = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n' + line));
+    assert.ok(errors.some(e => error.test(e)), line + ' → ' + JSON.stringify(errors));
+  }
+});
+
+test('web#183: the check looks each clipping up in the archive and warns, never silently', async () => {
+  const S = 'IMT/IMT-1954-04-24/0006/block/';
+  const body = ['[a](/read/IME/IME-1854-09-29/3)', '',
+    '![Rider weds](section:' + S + 'R00100-B000?highlight=rider+weds)', '',
+    '![Again](section:' + S + 'R00100-B000?highlight=rider+weds)', '',
+    '![Bridesmaids](section:' + S + 'R00246-B000?highlight=bridesmaid)', '',
+    '![Elsewhere](section:' + S + 'R00100-B001?highlight=Braddan)', '',
+    '![Photo](section:' + S + 'R00101-B000)', '',
+    '![Missing](section:' + S + 'R09999-B000)', '',
+    '![Busy](section:' + S + 'R00300-B000)', '',
+    '![Offline](section:' + S + 'R00301-B000)'].join('\n');
+  const asked = [];
+  const json = (status, doc) => ({ok: status === 200, status, json: async () => doc});
+  const section = (id, hits) => json(200, {section: {id: S + id, source_block_id: id}, hit_geometry: hits});
+  const fetchSection = async (url, init) => {
+    asked.push(url);
+    assert.ok(init.signal instanceof AbortSignal, 'every lookup has a time limit');
+    const [, path, query] = url.match(/\/api\/sections\/(.+?)(?:\?(.*))?$/);
+    const id = path.slice(S.length);
+    if (id === 'R00100-B000') return section(id, [{text: 'rider', block_id: id}, {text: 'weds', block_id: id}]);
+    if (id === 'R00246-B000') return section(id, []);
+    // Hits in another block of the same Item don't count: the clipping shows only its own block.
+    if (id === 'R00100-B001') return section(id, [{text: 'Braddan', block_id: 'R00245-B000'}]);
+    if (id === 'R00101-B000') { assert.equal(query, undefined); return section(id, []); }
+    if (id === 'R09999-B000') return json(404, {detail: 'not found'});
+    if (id === 'R00300-B000') return json(503, {detail: 'busy'});
+    throw new Error('network down');
+  };
+  const dir = await repo({'posts/laxey-wheel.md': good('', body)});
+  try {
+    const result = await validate(dir, {fetchSection});
+    assert.deepEqual(result.errors, []);
+    const W = 'posts/laxey-wheel.md: clipping ' + S;
+    assert.deepEqual(result.warnings.filter(w => !/has no label/.test(w)), [
+      W + 'R00246-B000: highlight "bridesmaid" matches nothing in the text the archive read for this section, so nothing will be highlighted. Highlights match the recognised text (see "Read the text"), not the true spelling.',
+      W + 'R00100-B001: highlight "Braddan" matches nothing in the text the archive read for this section, so nothing will be highlighted. Highlights match the recognised text (see "Read the text"), not the true spelling.',
+      W + "R09999-B000: the archive has no such section; the site will say the clipping can't be shown",
+      W + "R00300-B000: couldn't check it in the archive (status 503); check it on the preview",
+      W + "R00301-B000: couldn't check it in the archive (network down); check it on the preview",
+    ]);
+    assert.equal(asked.length, 7, 'the same section and highlight are looked up once');
+    assert.match(asked[0], /^https:\/\/[^/]+\/api\/sections\/IMT\/IMT-1954-04-24\/0006\/block\/R00100-B000\?q=rider\+weds$/);
+    // The publish build doesn't look anything up.
+    asked.length = 0;
+    await build(dir, join(dir, 'out'), {fetchSection});
+    assert.equal(asked.length, 0);
+  } finally { await rm(dir, {recursive: true, force: true}); }
+  assert.deepEqual(await checkClippings([], () => { throw new Error('not called'); }), []);
+});
+
+test('web#183: an archive that hangs gets warnings within the overall time limit, never a stuck job', async () => {
+  const S = 'IMT/IMT-1954-04-24/0006/block/';
+  const posts = {};
+  for (const n of [1, 2, 3]) posts['posts/post-' + n + '.md'] = good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Clip](section:' + S + 'R0010' + n + '-B000)');
+  const dir = await repo(posts);
+  let asked = 0;
+  // Never answers and ignores the abort signal, as a hung connection might.
+  const fetchSection = () => { asked++; return new Promise(() => {}); };
+  try {
+    const started = Date.now();
+    const result = await validate(dir, {fetchSection, archiveBudgetMs: 300});
+    const took = Date.now() - started;
+    assert.ok(took < 2000, 'finished in ' + took + ' ms');
+    assert.deepEqual(result.errors, []);
+    const clipping = result.warnings.filter(w => /clipping/.test(w));
+    assert.equal(clipping.length, 3, JSON.stringify(clipping));
+    assert.match(clipping[0], /^posts\/post-1\.md: clipping .*R00101-B000: couldn't check it in the archive \(no answer within 1 s\); check it on the preview$/);
+    assert.match(clipping[1], /R00102-B000: couldn't check it in the archive \(the archive check ran out of time\)/);
+    assert.match(clipping[2], /R00103-B000: couldn't check it in the archive \(the archive check ran out of time\)/);
+    assert.equal(asked, 1, 'nothing is asked once the time is up');
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});
+
+test('web#183: the blog-writer instructions show clippings the check accepts', async () => {
+  const prompt = await readFile(join(root, 'BLOG-WRITER-PROMPT.md'), 'utf8');
+  const examples = [...prompt.matchAll(/`(!\[[^\]`]+\]\(section:IMT\/[^`]+\))`/g)].map(m => m[1]);
+  assert.equal(examples.length, 2, 'two worked examples');
+  const {errors, clippings} = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n' + examples.join('\n\n')));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(clippings.map(c => c.highlight), ['rider weds', '"Rev. B. Kelly"']);
+  assert.doesNotMatch(prompt, /\]\(article:/, 'no whole-Article clippings');
 });
