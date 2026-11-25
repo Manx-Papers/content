@@ -49,7 +49,9 @@ It is a splendid scene - and proof that sedan chairs were not confined to Dougla
 
 There were physical chairs to be bought and sold, too. In November 1838, [an auction in Douglas Market Place](/items/MNH/MNH-1838-11-06/0002/record/42) offered a sedan chair in good condition alongside furniture and household goods.
 
-![Douglas auction listing](section:MNH/MNH-1838-11-06/0002/block/R00042-B000?highlight=Sedan+Chair "A sedan chair in good condition appears in a Douglas auction notice.") In September 1845, a sedan chair appeared among the possessions advertised for sale at [Government House, Castletown, following the death of Lieutenant-Governor General Ready](/items/MNB/MNB-1845-09-13/0002/record/67). Whether that was the same chair used by Smelt in 1824 is an intriguing possibility, but the advertisements do not establish a connection.
+![Douglas auction listing](section:MNH/MNH-1838-11-06/0002/block/R00042-B000?highlight=Sedan+Chair "A sedan chair in good condition appears in a Douglas auction notice.")
+
+In September 1845, a sedan chair appeared among the possessions advertised for sale at [Government House, Castletown, following the death of Lieutenant-Governor General Ready](/items/MNB/MNB-1845-09-13/0002/record/67). Whether that was the same chair used by Smelt in 1824 is an intriguing possibility, but the advertisements do not establish a connection.
 
 ![Government House auction](section:MNB/MNB-1845-09-13/0002/block/R00067-B000?highlight=Sedan+Chair "A sedan chair is listed among the possessions offered for sale at Government House.")
 
