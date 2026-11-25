@@ -30,9 +30,8 @@ Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F
 - A list item
 - Another
 
-> A short quotation from the paper.
-
-A newspaper clipping is one section of a page: its headline in a few words, then `section:` and the
+Show what a paper said with a newspaper clipping, highlighting the key words, rather than quoting
+it. A clipping is one section of a page: its headline in a few words, then `section:` and the
 section ID (the part of the section's copy-link address after `/sections/`). Highlight words with
 `?highlight=word+word`, spelt as in the archive's "Read the text". The site adds the paper and date,
 and a "Read the text" section under it. Correct that text, if it needs it, in a `::: text` block
@@ -42,6 +41,11 @@ straight after the clipping (`::: description` for a picture); see the README.
 ::: text
 CLUBMAN'S T.T. RIDER WEDS
 :::
+
+Quote only when no clipping can do it, such as words that run across several sections. Keep it short
+and exact:
+
+> A short quotation from the paper.
 
 A picture that isn't from the archive, such as a modern photo or a postcard, goes in `images/<file-name>/`
 with alt text and an optional caption.
