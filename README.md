@@ -77,8 +77,8 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     be reached, the check says so: check the clipping on the preview instead.
   - **Captions.** Under each clipping the site shows, in order: your caption, if you gave one; for
     a photograph, the newspaper's own printed caption, labelled "Printed caption:" (added
-    automatically from the archive, nothing to do); then the paper, date and page, with a link to
-    the full page.
+    automatically from the archive, nothing to do, and marked "(read by machine)"); then the
+    paper, date and page. The caption has no links: the clipping itself opens the Article.
     - Your caption is your own note on why the clipping matters. Don't repeat the printed caption
       in it; the reader already sees that.
     - Don't also clip a photograph's caption section on its own: the photograph's clipping already
@@ -175,8 +175,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `79f1f89` (the squash merge of
-web#192: numbered clipping links and a safer caption cut, after web#191's Article pages, web#189). Web squash-merges, so record the commit on
+until this copy is updated. The current copy is from web `main` at `6c77969` (the squash merge of
+web#194: no Full page link in a clipping's caption, web#183). Web squash-merges, so record the commit on
 web `main`, not a pull request's head.
 
 ## Publishing safeguards

@@ -1,12 +1,12 @@
 {
   "source": "Manx-Papers/web",
-  "commit": "79f1f8923a0151682daa9e5a1b031613d973ddbe",
-  "source_status": "Manx-Papers/web main 79f1f89, the squash merge of web#192 (review Lows of web#190: numbered clipping links, muted machine note, safer caption cut), after web#191 (Article page: clippings and Article links go to /items/ and /sections/). All five files are identical to web main at that commit.",
+  "commit": "6c7796935cbf7556bf2777f345ae190426e962c7",
+  "source_status": "Manx-Papers/web main 6c77969, the squash merge of web#194 (owner, web#183: no Full page link in a clipping's caption). All five files are identical to web main at that commit.",
   "drift_guard": "web test/blog-vendor.test.mjs pins the same five hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all five together when web's src/blog.mjs, clipping.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
     "blog.mjs": "1bc0f9fff359528665b234df18d4e4da6e3773501066010f7df268b01d6a552f",
-    "clipping.mjs": "36a0b8936ef9c8ee4149eaaa882705d81075566ee281c70d9fb0a99423c2f0f7",
+    "clipping.mjs": "ab34c30699f78ac6f320f41a9ff0208df931054b3837ecd8fa6a7f216d97daa9",
     "markdown.mjs": "b947a6feb8a5d1b586ae32ff5c6eede76e89934cad858f8250e3e46e6abd73f6",
     "proxy.mjs": "df2d7d854b0441963ecd0f67f65bb8ec510f39610a91528a7b0f23d4f1bfb273",
     "security.mjs": "a1eb6d3902126ae86b78eed7003954f51731874f175d85e96efb741386c8a5e8"
