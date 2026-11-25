@@ -330,3 +330,13 @@ test('web#183: the check looks each clipping up in the archive and warns, never 
   } finally { await rm(dir, {recursive: true, force: true}); }
   assert.deepEqual(await checkClippings([], () => { throw new Error('not called'); }), []);
 });
+
+test('web#183: the blog-writer instructions show clippings the check accepts', async () => {
+  const prompt = await readFile(join(root, 'BLOG-WRITER-PROMPT.md'), 'utf8');
+  const examples = [...prompt.matchAll(/`(!\[[^\]`]+\]\(section:IMT\/[^`]+\))`/g)].map(m => m[1]);
+  assert.equal(examples.length, 2, 'two worked examples');
+  const {errors, clippings} = checkPost('laxey-wheel', good('', '[a](/read/IME/IME-1854-09-29/3)\n\n' + examples.join('\n\n')));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(clippings.map(c => c.highlight), ['rider weds', '"Rev. B. Kelly"']);
+  assert.doesNotMatch(prompt, /\]\(article:/, 'no whole-Article clippings');
+});
