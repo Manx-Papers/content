@@ -113,11 +113,19 @@ export function clippingLayout(doc, clip) {
   if (R - L < 1 || B - T < 1) throw new Error('empty outline');
   // Word boxes in this section only. Their offsets are in the Item's text; the section's span in it
   // places them in the section's own text, and a mark is kept only where the two texts agree.
-  const hits = (Array.isArray(doc.hit_geometry) ? doc.hit_geometry : []).filter(h => h?.block_id === section.source_block_id && xywh(h.box));
-  const span = (doc.item?.sections ?? []).find(s => s?.id === section.id)?.span;
+  const hits = (Array.isArray(doc.hit_geometry) ? doc.hit_geometry : []).filter(h => h?.block_id === section.source_block_id && xywh(h.box))
+    .sort((a, b) => (a.start ?? 0) - (b.start ?? 0));
+  const itemSections = Array.isArray(doc.item?.sections) ? doc.item.sections : [];
+  const itemText = typeof doc.item?.text === 'string' ? doc.item.text : '';
+  const span = itemSections.find(s => s?.id === section.id)?.span;
   const text = typeof section.text === 'string' ? section.text : '';
-  const spans = Array.isArray(span) && Number.isInteger(span[0]) ? hits.map(h => [h.start - span[0], h.end - span[0], h.text])
-    .filter(([s, e, word]) => Number.isInteger(s) && e > s && s >= 0 && e <= text.length && text.slice(s, e).toLowerCase() === String(word).toLowerCase()) : [];
+  const spans = joinSpans(text, Array.isArray(span) && Number.isInteger(span[0]) ? hits.map(h => [h.start - span[0], h.end - span[0], h.text])
+    .filter(([s, e, word]) => Number.isInteger(s) && e > s && s >= 0 && e <= text.length && text.slice(s, e).toLowerCase() === String(word).toLowerCase()) : []);
+  // A photograph's own printed caption: the Caption sections of its picture Item (owner, 25 Nov).
+  const role = s => s?.role?.definition?.label;
+  const printed = doc.content_type === 'picture' && role(section) !== 'Caption'
+    ? readableText(itemSections.filter(s => s?.id !== section.id && role(s) === 'Caption' && validSpan(s.span, itemText))
+      .map(s => itemText.slice(s.span[0], s.span[1])).join('\n\n')).join(' ') : '';
   const citation = doc.citation ?? {};
   const record = typeof section.item?.id === 'string' ? section.item.id : '';
   const [title, issue] = clip.id.split('/');
@@ -125,6 +133,7 @@ export function clippingLayout(doc, clip) {
   const readIssue = date && issue === title + '-' + date ? date : issue;
   return {
     W, H, path, preview: preview !== path && isMediaPath(preview) ? preview : '', polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
+    bands: bands(hits, itemText), printed,
     picture: doc.content_type === 'picture',
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
@@ -134,6 +143,41 @@ export function clippingLayout(doc, clip) {
   };
 }
 
+const validSpan = (span, text) => Array.isArray(span) && Number.isInteger(span[0]) && Number.isInteger(span[1]) && span[0] >= 0 && span[1] > span[0] && span[1] <= text.length;
+// Only spaces (and at most a line end) between two highlighted words: they are one phrase. Without
+// the text, words one character apart are.
+const between = (text, from, to) => Number.isInteger(from) && Number.isInteger(to) && to >= from
+  && (text.length && to <= text.length ? /^[^\S\n]*\n?[^\S\n]*$/.test(text.slice(from, to)) : to - from <= 1);
+
+// Highlighted words that follow one another in the text become one mark in "Read the text".
+export function joinSpans(text, spans) {
+  const joined = [];
+  for (const [s, e, word] of [...spans].sort((a, b) => a[0] - b[0])) {
+    const last = joined.at(-1);
+    if (last && s >= last[1] && between(text, last[1], s)) { last[1] = e; last[2] = text.slice(last[0], e); }
+    else if (!last || s >= last[1]) joined.push([s, e, word]);
+  }
+  return joined;
+}
+
+// Highlighter pen (owner, 25 Nov): highlighted words that follow one another in the text and sit on
+// the same printed line become one band, padded a little so it covers the letters' full height.
+export function bands(hits, itemText) {
+  const lines = [];
+  for (const hit of hits) {
+    const [x, y, w, h] = hit.box, last = lines.at(-1);
+    const sameLine = last && y < last.y + last.h && y + h > last.y && Math.min(y + h, last.y + last.h) - Math.max(y, last.y) >= 0.5 * Math.min(h, last.h);
+    if (last && sameLine && x >= last.x && between(itemText, last.end, hit.start)) {
+      const top = Math.min(last.y, y), bottom = Math.max(last.y + last.h, y + h);
+      Object.assign(last, {w: Math.max(last.x + last.w, x + w) - last.x, y: top, h: bottom - top, end: hit.end});
+    } else lines.push({x, y, w, h, end: hit.end});
+  }
+  return lines.map(({x, y, w, h}) => {
+    const px = Math.round(h * 0.15), py = Math.round(h * 0.15);
+    return [x - px, y - py, w + 2 * px, h + 2 * py];
+  });
+}
+
 const pct = n => Number(n.toFixed(4)) + '%';
 const frac = n => Number(n.toFixed(6));
 
@@ -141,23 +185,27 @@ const frac = n => Number(n.toFixed(6));
 // original is about 5300 x 7200 px (38 megapixels, about 150 MB once decoded) and a post can show
 // sections of several pages; the preview is at most 2200 px on its long side (about 1600 x 2200, 3.6
 // megapixels, about 14 MB decoded), in the same proportions. Every clipping of a page uses the same
-// preview address, so the browser fetches and decodes it once. The caption links the original for full
-// resolution. The image is placed and masked in fractions of the page, and the highlights are drawn in
-// page pixels on their own SVG, so they fit the preview without rescaling.
+// preview address, so the browser fetches and decodes it once. The image is placed, sized and masked in
+// fractions of the page, and the highlights are drawn in page pixels on their own SVG, so they fit the
+// preview without rescaling.
 
-function scanHTML(clip, layout, alt, n) {
-  const {W, H, polygon, bounds: [L, T, R, B], hits} = layout, w = R - L, h = B - T, id = 'clipping-' + n;
+// Every clipping of a page shares one image address. Only the first is lazy: a lazy <img> paints only
+// once its own lazy-load trigger fires, even when the image is already in memory, and a later clipping
+// of the same page was seen to stay blank for seconds after the others had drawn. The others load
+// eagerly at low priority, so they draw as soon as the page's one download arrives.
+function scanHTML(clip, layout, alt, n, {lazy = true} = {}) {
+  const {W, H, polygon, bounds: [L, T, R, B], bands} = layout, w = R - L, h = B - T, id = 'clipping-' + n;
   // A box the section's shape holds the whole page image, moved so the section shows; the clip path
   // (in the image's own 0-1 units) hides everything outside the section's outline. Highlights are
   // drawn in page pixels on an SVG laid over the box. The whole clipping opens the Article.
   const points = polygon.map(([x, y]) => frac(x / W) + ',' + frac(y / H)).join(' ');
-  const marks = hits.length ? '<svg class="blog-clipping-hits" viewBox="' + L + ' ' + T + ' ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
-    + hits.map(([x, y, bw, bh]) => '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '"/>').join('') + '</svg>' : '';
+  const marks = bands.length ? '<svg class="blog-clipping-hits" viewBox="' + L + ' ' + T + ' ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
+    + bands.map(([x, y, bw, bh]) => '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="' + Math.round(bh * 0.2) + '"/>').join('') + '</svg>' : '';
   return '<a class="blog-clipping-scan" href="' + escapeHTML(viewURL(clip.id)) + '" style="max-width:' + w + 'px">'
     + '<span class="blog-clipping-part" style="aspect-ratio:' + w + '/' + h + '">'
     + '<svg class="blog-clipping-mask" width="0" height="0" aria-hidden="true" focusable="false"><clipPath id="' + id + '" clipPathUnits="objectBoundingBox"><polygon points="' + points + '"/></clipPath></svg>'
-    + '<img src="' + escapeHTML(layout.preview || layout.path) + '" alt="' + escapeHTML(alt) + '" width="' + W + '" height="' + H + '" loading="lazy" decoding="async"'
-    + ' style="width:' + pct(100 * W / w) + ';left:' + pct(-100 * L / w) + ';top:' + pct(-100 * T / h) + ';clip-path:url(#' + id + ')">'
+    + '<img src="' + escapeHTML(layout.preview || layout.path) + '" alt="' + escapeHTML(alt) + '" width="' + W + '" height="' + H + '"' + (lazy ? ' loading="lazy"' : ' fetchpriority="low"') + ' decoding="async"'
+    + ' style="width:' + pct(100 * W / w) + ';height:' + pct(100 * H / h) + ';left:' + pct(-100 * L / w) + ';top:' + pct(-100 * T / h) + ';clip-path:url(#' + id + ')">'
     + marks + '</span><span class="sr-only"> (opens the whole article)</span></a>';
 }
 
@@ -181,24 +229,30 @@ function textHTML(clip, layout) {
     + 'Text read from the scan by machine, so it may contain errors.</p></details>';
 }
 
+// The caption comes straight after the clipping: the writer's caption, the paper's own printed
+// caption (a photograph's), then where it was printed with a link to the full page. The clipping
+// itself links to the whole Article, so the caption has no second link there (except in the
+// placeholder, which has no clipping). The paper and date are said here only, not in the alt text.
 function captionHTML(clip, layout) {
   const where = layout ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ') : '';
-  const links = '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article</a>'
-    + (layout?.fullPage ? ' · <a href="' + escapeHTML(layout.fullPage) + '">Full page</a>' : '')
-    + (layout?.preview ? ' · <a href="' + escapeHTML(layout.path) + '">Full-size scan</a>' : '');
-  return '<figcaption>' + (clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span> ' : '')
-    + '<span class="blog-clipping-source">' + (where ? where + ' · ' : '') + links + '</span></figcaption>';
+  const links = layout
+    ? (layout.fullPage ? '<a href="' + escapeHTML(layout.fullPage) + '">Full page<span class="sr-only">: ' + escapeHTML(clip.alt) + '</span></a>' : '')
+    : '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(clip.alt) + '</span></a>';
+  return '<figcaption>' + (clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '')
+    + (layout?.printed ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed) + '</span>' : '')
+    + '<span class="blog-clipping-source">' + [where, links].filter(Boolean).join(' · ') + '</span></figcaption>';
 }
 
-export function clippingHTML(clip, layout, n) {
+// A clipping is its figure (the clipping and its caption), then "Read the text". A figcaption must be
+// the figure's first or last child, so the text follows the figure inside the clipping's wrapper.
+export function clippingHTML(clip, layout, n, options) {
   if (!layout) {
-    return '<figure class="blog-clipping blog-clipping-unavailable">'
+    return '<div class="blog-clipping blog-clipping-unavailable"><figure>'
       + '<p class="blog-clipping-missing">This clipping can’t be shown just now: “' + escapeHTML(clip.alt) + '”.</p>'
-      + textHTML(clip, null) + captionHTML(clip, null) + '</figure>';
+      + captionHTML(clip, null) + '</figure>' + textHTML(clip, null) + '</div>';
   }
-  const alt = 'Clipping: "' + clip.alt + '"' + (layout.paper ? ', ' + layout.paper : '') + (layout.date ? ', ' + layout.date : '')
-    + (layout.hits.length ? ', highlighting “' + clip.highlight.replace(/"/g, '') + '”' : '');
-  return '<figure class="blog-clipping">' + scanHTML(clip, layout, alt, n) + textHTML(clip, layout) + captionHTML(clip, layout) + '</figure>';
+  const alt = 'Clipping: "' + clip.alt + '"' + (layout.hits.length ? ', highlighting “' + clip.highlight.replace(/"/g, '') + '”' : '');
+  return '<div class="blog-clipping"><figure>' + scanHTML(clip, layout, alt, n, options) + captionHTML(clip, layout) + '</figure>' + textHTML(clip, layout) + '</div>';
 }
 
 // Replaces the renderer's <!--clipping:N--> markers. Never throws: a clipping that can't be drawn
@@ -223,18 +277,25 @@ export async function renderClippings(html, clippings, env, {budget = BUDGET_MS,
     }
     return doc;
   };
-  const figures = await Promise.all(clippings.map(async (clip, i) => {
+  const layouts = await Promise.all(clippings.map(async clip => {
     // One read per section and highlight, however often the post shows it.
     const key = sectionURL(clip.id, clip.highlight);
     if (!documents.has(key)) documents.set(key, readSection(clip, key));
     try {
       const layout = clippingLayout(await documents.get(key), clip);
       if (clip.highlight && !layout.hits.length) console.error('clipping ' + clip.id + ': highlight "' + clip.highlight + '" matches nothing in the recognised text');
-      return clippingHTML(clip, layout, i + 1);
+      return layout;
     } catch (error) {
       console.error('clipping ' + clip.id + ': ' + (error?.message ?? error));
-      return clippingHTML(clip, null, i + 1);
+      return null;
     }
   }));
+  const pages = new Set();
+  const figures = clippings.map((clip, i) => {
+    const layout = layouts[i], src = layout && (layout.preview || layout.path);
+    const lazy = !pages.has(src);
+    if (src) pages.add(src);
+    return clippingHTML(clip, layout, i + 1, {lazy});
+  });
   return html.replace(/<!--clipping:(\d+)-->/g, (_, i) => figures[Number(i)] ?? '');
 }
