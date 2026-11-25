@@ -24,6 +24,11 @@ no Beta step and no code release.
 Nothing here holds or calls an AI provider.
 
 ## Writing a post
+The **[blog-writer instructions](BLOG-WRITER-PROMPT.md)** are the owner's research, editorial and drafting
+requirements for posts: the prompt the Manx Papers Blog plugin uses. They live here so that anyone with
+access to this repository can read and update them; Control #244 points here. Where they and the
+rules below disagree, the rules below (and `node scripts/validate.mjs`) decide whether a post is accepted.
+
 - **Start from the template.** Copy `templates/post.md` to `posts/<file-name>.md`. The file name is
   the post's address:
   - it uses lower-case words joined by hyphens, for example `posts/laxey-wheel.md` → `/blog/laxey-wheel`;
