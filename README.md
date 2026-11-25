@@ -156,7 +156,7 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `27e30f0`, the head of web#188 (archive
+until this copy is updated. The current copy is from web `51b3414`, the head of web#188 (archive
 clippings, web#183); it becomes web `main` when that pull request merges.
 
 ## Publishing safeguards

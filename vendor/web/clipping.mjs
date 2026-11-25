@@ -76,6 +76,8 @@ export function clippingLayout(doc, clip) {
   const W = image.width, H = image.height;
   const path = typeof image.url === 'string' && image.url.startsWith(MEDIA_ORIGIN + '/page/') ? '/media' + image.url.slice(MEDIA_ORIGIN.length) : '';
   if (!whole(W) || !whole(H) || !isMediaPath(path)) throw new Error('no page image');
+  // Media's search-page preview of the same page (WebP, longest side 2200 px, same proportions).
+  const preview = path.replace(/^\/media\/page\/(.+)\.(?:jpg|png)$/, '/media/search-page-preview/$1.webp');
   // The section's exact outline; a rectangle from crop_ltrb when the API gives no polygon.
   const ltrb = section.geometry?.crop_ltrb, given = section.geometry?.polygon;
   let polygon = Array.isArray(given) && given.length >= 3 && given.every(point) ? given
@@ -98,7 +100,7 @@ export function clippingLayout(doc, clip) {
   const date = citation.publication_date, pageNumber = Number(citation.page_number ?? doc.page_number);
   const readIssue = date && issue === title + '-' + date ? date : issue;
   return {
-    W, H, path, polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
+    W, H, path, preview: preview !== path && isMediaPath(preview) ? preview : '', polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
     picture: doc.content_type === 'picture',
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
@@ -111,6 +113,14 @@ export function clippingLayout(doc, clip) {
 const pct = n => Number(n.toFixed(4)) + '%';
 const frac = n => Number(n.toFixed(6));
 
+// Phones get Media's page preview instead of the original scan. An original is about 5300 x 7200 px
+// (38 megapixels, about 150 MB once decoded), and a post can show sections of several pages; Safari on
+// iPhone can run out of memory and reload the tab. The preview is about 1600 x 2200 (3.6 megapixels,
+// about 14 MB decoded), and at a phone's column width it still gives a headline more pixels than the
+// screen shows in CSS pixels. Wider screens keep the original, so print stays sharp. The mask and
+// highlights are in fractions of the page and page pixels, so they fit either image.
+const PHONE = '(max-width: 47.99em)';
+
 function scanHTML(clip, layout, alt, n) {
   const {W, H, polygon, bounds: [L, T, R, B], hits} = layout, w = R - L, h = B - T, id = 'clipping-' + n;
   // A box the section's shape holds the whole page image, moved so the section shows; the clip path
@@ -122,8 +132,10 @@ function scanHTML(clip, layout, alt, n) {
   return '<a class="blog-clipping-scan" href="' + escapeHTML(viewURL(clip.id)) + '" style="max-width:' + w + 'px">'
     + '<span class="blog-clipping-part" style="aspect-ratio:' + w + '/' + h + '">'
     + '<svg class="blog-clipping-mask" width="0" height="0" aria-hidden="true" focusable="false"><clipPath id="' + id + '" clipPathUnits="objectBoundingBox"><polygon points="' + points + '"/></clipPath></svg>'
+    + (layout.preview ? '<picture><source media="' + PHONE + '" type="image/webp" srcset="' + escapeHTML(layout.preview) + '">' : '')
     + '<img src="' + escapeHTML(layout.path) + '" alt="' + escapeHTML(alt) + '" width="' + W + '" height="' + H + '" loading="lazy" decoding="async"'
     + ' style="width:' + pct(100 * W / w) + ';left:' + pct(-100 * L / w) + ';top:' + pct(-100 * T / h) + ';clip-path:url(#' + id + ')">'
+    + (layout.preview ? '</picture>' : '')
     + marks + '</span><span class="sr-only"> (opens the whole article)</span></a>';
 }
 
