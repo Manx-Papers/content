@@ -1,7 +1,7 @@
 {
   "source": "Manx-Papers/web",
-  "commit": "2b8d798a69ba0fb08f3a05190de5e39b943fdfc6",
-  "source_status": "Manx-Papers/web#190 head 2b8d798 (web#183 owner feedback of 25 Nov: printed captions, highlighter bands, no full-size scan link, accessibility order). Only clipping.mjs changes; blog.mjs, markdown.mjs, proxy.mjs and security.mjs are unchanged from web main 90673a0. Becomes web main when web#190 merges.",
+  "commit": "6c58f514d85664aa87bb5fe7f9ec8c3a0cd09557",
+  "source_status": "Manx-Papers/web main 6c58f51, the squash merge of web#190 (web#183 owner feedback of 25 Nov: printed captions, highlighter bands, no full-size scan link, accessibility order). All five files are identical to web main at that commit.",
   "drift_guard": "web test/blog-vendor.test.mjs pins the same five hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all five together when web's src/blog.mjs, clipping.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {

@@ -76,6 +76,8 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     the full page.
     - Your caption is your own note on why the clipping matters. Don't repeat the printed caption
       in it; the reader already sees that.
+    - Don't also clip a photograph's caption section on its own: the photograph's clipping already
+      shows that caption, so readers would see (and screen readers read) it twice.
   - **Every clipping must work without seeing it.** The alt text is `Clipping: "` + your headline
     + `"`, so give only the headline. Don't paste the article into it, and don't add the paper or
     date (the caption says those). Under the caption the site shows "Read the text", the section's
@@ -164,12 +166,13 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `2b8d798`, the head of web#190 (printed
-captions and highlighter bands, web#183); it becomes web `main` when that pull request merges.
+until this copy is updated. The current copy is from web `main` at `6c58f51` (the squash merge of
+web#190: printed captions and highlighter bands, web#183). Web squash-merges, so record the commit on
+web `main`, not a pull request's head.
 
 ## Publishing safeguards
-- `main` is protected: changes arrive only by pull request with the owner's approval and a passing
-  `content` check.
+- `main` is protected: changes arrive only by pull request with a passing `content` check, and the
+  owner merges.
 - Checking and publishing are separate jobs. Publishing runs in the `blog-publish` Environment,
   which only `main` can use, so no pull-request run can reach the content-store secrets.
 - Every commit to `main` starts a run. A run publishes only if its commit is still the tip of
