@@ -40,7 +40,7 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     the photo. Each shows exactly that section's outline, so nothing from the stories around it
     shows, and clicking it opens the whole Article.
   - Put each clipping on a line of its own: `![` + its headline in a few words + `](section:` + the
-    section ID + `)`, with an optional caption in quotes:
+    section ID + `)`, with an optional caption of your own in quotes:
 
     ```markdown
     ![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000 "A T.T. rider marries.")
@@ -59,7 +59,9 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     ![The service](section:IMT/IMT-1954-04-24/0006/block/R00245-B000?highlight="Rev.+B.+Kelly")
     ```
 
-    The words are marked on the clipping and in its "Read the text", and named in its alt text.
+    The words are marked on the clipping like a highlighter pen: a soft yellow band behind the print,
+    one band for words that follow one another on the same printed line. In "Read the text" a phrase
+    is marked as one, and the words are named in the clipping's alt text.
   - **Highlights match the text as the archive read it, not the true spelling.** The archive's text
     comes from automatic reading of the scan (OCR), so a word can be misread (for example "rn"
     read for "m"). A highlight only finds the words as they were read, and whole words
@@ -68,11 +70,16 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     finds nothing in that section, or when the section isn't in the archive. A warning doesn't stop
     the post, but nothing will be highlighted, so fix or remove the highlight. If the archive can't
     be reached, the check says so: check the clipping on the preview instead.
-  - **Every clipping must work without seeing it.** The site adds the paper and date to the alt
-    text, for example `Clipping: "Clubman's T.T. rider weds", Isle of Man Times, 24 April 1954`, so
-    give only the headline. Don't paste the article into it. Under the clipping the site shows "Read
-    the text", the section's text from the archive, for screen readers and anyone who finds old
-    print hard to read.
+  - **Captions.** Under each clipping the site shows, in order: your caption, if you gave one; for
+    a photograph, the newspaper's own printed caption, labelled "Printed caption:" (added
+    automatically from the archive, nothing to do); then the paper, date and page, with a link to
+    the full page.
+    - Your caption is your own note on why the clipping matters. Don't repeat the printed caption
+      in it; the reader already sees that.
+  - **Every clipping must work without seeing it.** The alt text is `Clipping: "` + your headline
+    + `"`, so give only the headline. Don't paste the article into it, and don't add the paper or
+    date (the caption says those). Under the caption the site shows "Read the text", the section's
+    text from the archive, for screen readers and anyone who finds old print hard to read.
     - Check that text on the preview. If the automatic reading has obvious mistakes, give a
       corrected version straight after the clipping line, between `::: text` and `:::`:
 
@@ -86,7 +93,8 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
 
     - Highlights still show on the clipping, but your corrected text has no marks.
     - A photograph or other picture has no text to read. Give a fuller description of what it shows
-      instead, between `::: description` and `:::`; without one there is no "Read the text".
+      instead, between `::: description` and `:::`; without one there is no "Read the text". Its
+      printed caption is already shown, so don't copy it into the description.
     - If the archive can't be reached when the post is read, the site says the clipping can't be
       shown just now and keeps the caption, a View article link and any text you gave.
 - **Other pictures** (modern photos, postcards and so on) go in `images/<file-name>/`:
@@ -156,8 +164,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `0acebcb`, the head of web#188 (archive
-clippings, web#183); it becomes web `main` when that pull request merges.
+until this copy is updated. The current copy is from web `2b8d798`, the head of web#190 (printed
+captions and highlighter bands, web#183); it becomes web `main` when that pull request merges.
 
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing

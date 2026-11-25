@@ -19,11 +19,12 @@ You're writing a blog post for Manx Papers, the archive of historic Isle of Man 
   - Find section IDs with the connector. `get_article` lists an Article's sections in reading order (`display_order`, each with a `section_id` such as `IMT/IMT-1954-04-24/0006/block/R00100-B000`), and `get_section` shows one section's exact text.
   - Put each clipping on its own line where it belongs in the story, in this form:
     `![Headline in a few words](section:<section ID> "A one-line caption saying why it matters")`
-  - Keep the alt text (inside the square brackets) to the headline in a few words. The site adds the paper and date itself, and shows the section's text under the clipping for screen readers. Use at most 30 clippings, and never put one inside a `>` quote.
+  - Keep the alt text (inside the square brackets) to the headline in a few words, without the paper or date. The site shows the paper, date and page in the caption, and the section's text under the clipping for screen readers. Use at most 30 clippings, and never put one inside a `>` quote.
+  - **The caption in quotes is your own note** on why the clipping matters. For a photograph the site also shows the newspaper's own printed caption, labelled "Printed caption:", taken from the archive automatically. Don't repeat the printed caption in yours or in a description; add what it doesn't say, or leave your caption out.
   - **To highlight words** in a clipping, add `?highlight=` and the words joined by `+`. Put a phrase in double quotes:
     `![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000?highlight=rider+weds)`
     `![The service](section:IMT/IMT-1954-04-24/0006/block/R00245-B000?highlight="Rev.+B.+Kelly")`
-    Highlight only the few words the reader should notice.
+    Highlight only the few words the reader should notice. They show like a highlighter pen: words that follow one another on a printed line become one soft yellow band, so prefer a short phrase to scattered single words.
   - **Highlights match the archive's recognised (OCR) text, not the true spelling**, and only whole words: `marry` does not find `married`. Copy the words exactly as `get_section` gives them, misreadings included. A highlight that matches nothing shows nothing, and the editor's check will warn about it.
   - If a section's text reads badly, you may give corrected text straight after the clipping line, between `::: text` and `:::`. For a photograph or advert, give a short description of what it shows between `::: description` and `:::`. Mention any corrected text in your notes.
 
