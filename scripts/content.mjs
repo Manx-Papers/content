@@ -6,29 +6,37 @@ import {join} from 'node:path';
 import {parsePost} from './frontmatter.mjs';
 import {postMeta, SLUG} from '../vendor/web/blog.mjs';
 import {renderMarkdown, IMAGE_FILE} from '../vendor/web/markdown.mjs';
-import {sectionURL} from '../vendor/web/clipping.mjs';
+import {sectionURL, viewURL} from '../vendor/web/clipping.mjs';
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const unescapeHTML = text => text.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"})[e]);
 // An archive link is a rendered link (not text in a code span) to a path the Worker accepts as a
-// post source: a /read/ page or a /search?view= Article. postMeta is the Worker's own rule for that.
+// post source: a /read/ page or an Article (/items/, /sections/ or /search?view=). postMeta is the
+// Worker's own rule for that.
 const SOURCE_PROBE = {title: 'x', date: '2026-01-01', summary: 'x', slug: 'x'};
 export function archiveHref(href) {
   try { postMeta({...SOURCE_PROBE, sources: [href]}); return true; } catch { return false; }
 }
 // The site's copy-link buttons give absolute addresses: https://beta.manxpapers.com/items/<Item id>
-// for an Article, or …/search?view=… . A pasted address is stored as the site path the Worker
-// accepts: the site part (Beta, live or www) is removed, and /items/<id> (or /sections/<id>), which
-// the site redirects to the Article's View Article page, becomes /search?view=<id> in the same form.
+// for an Article. A pasted address is stored as the site path: the site part (Beta, live or www) is
+// removed. Every Article link is stored as its Article page (web#189), the address the site itself
+// links and copies: /items/<Item id>, or /sections/<Section id> for a section, which opens its
+// Article at that section. An older View Article address (/search?view=<id>), which the site
+// redirects to that page, is stored as the page too. An ID the page can't take is left as it is.
 const SITE = /^https:\/\/(?:beta\.|www\.)?manxpapers\.com(?=\/)/;
-const ITEM = /^\/(?:items|sections)\/([A-Za-z0-9_/-]+)$/;
+const ID = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
+const ARTICLE = /^\/(?:items|sections)\/(.+)$/, VIEW = /^\/search\?view=([^&#]+)$/;
 export function sitePath(url) {
   if (typeof url !== 'string') return url;
-  const path = url.replace(SITE, ''), item = ITEM.exec(path);
-  return item ? '/search?' + new URLSearchParams({view: item[1]}) : path;
+  const path = url.replace(SITE, ''), m = ARTICLE.exec(path) ?? VIEW.exec(path);
+  if (!m) return path;
+  let id;
+  try { id = decodeURIComponent(m[1]); } catch { return path; }
+  return ID.test(id) && id.length <= 200 ? viewURL(id) : path;
 }
-// The same for link and image targets in the text: ](https://beta.manxpapers.com/…) and ](/items/…).
-const BODY_LINK = /\]\((https:\/\/(?:beta\.|www\.)?manxpapers\.com\/[^\s)]*|\/(?:items|sections)\/[A-Za-z0-9_/-]+)(?=[\s)])/g;
+// The same for link and image targets in the text: ](https://beta.manxpapers.com/…), ](/items/…) and
+// ](/search?view=…).
+const BODY_LINK = /\]\((https:\/\/(?:beta\.|www\.)?manxpapers\.com\/[^\s)]*|\/(?:items|sections)\/[A-Za-z0-9_/-]+|\/search\?view=[^\s)&#]+)(?=[\s)])/g;
 // web#183: a clipping names its section after section:. The section's copy-link address pasted there
 // (section:https://beta.manxpapers.com/sections/<id>, or section:/sections/<id>) is stored as section:<id>.
 const CLIPPING_LINK = /\]\(section:(?:https:\/\/(?:beta\.|www\.)?manxpapers\.com)?\/sections\/([A-Za-z0-9_/-]+)(?=[\s)?])/g;

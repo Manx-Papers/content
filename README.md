@@ -11,7 +11,7 @@ no Beta step and no code release.
    - the front matter must be valid;
    - the text must be safe;
    - every image the post shows must be in its folder;
-   - at least one claim must link to the archive (an Article, `/search?view=…`, or a page, `/read/…`);
+   - at least one claim must link to the archive (an Article, `/items/…`, or a page, `/read/…`);
    - a `sources` entry without a label is a warning, not an error.
 3. **Review and merge.** The owner reviews the pull request and merges it. **Merging is publishing.**
 4. **Publish.** The workflow copies the posts to the content store, the R2 bucket `manxpapers-content`
@@ -43,7 +43,7 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
   - **A clipping is one section of a page** (a headline, a paragraph, a photograph), not a whole
     Article. Build the story from the sections you want: the headline, then a key paragraph, then
     the photo. Each shows exactly that section's outline, so nothing from the stories around it
-    shows, and clicking it opens the whole Article.
+    shows, and clicking it opens the whole Article on its own page, at that section.
   - Put each clipping on a line of its own: `![` + its headline in a few words + `](section:` + the
     section ID + `)`, with an optional caption of your own in quotes:
 
@@ -108,13 +108,17 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text, and can have a caption.
 - **Link to Articles, not pages.** Every factual claim links to the archive, and the link should be
-  the **Article** it comes from. Press the Article's copy-link button (on its search result or in
-  View Article) and paste the address, for example
+  the **Article** it comes from. Press the Article's copy-link button (on its search result, in
+  View Article or on the Article's page) and paste the address, for example
   `[the Examiner asked](https://beta.manxpapers.com/items/IME/IME-1946-07-05/0001/record/172)`.
   - The check accepts the address as pasted, from Beta or the live site, and stores it as the
-    site's own path, `/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172`. Typing that path
-    works too.
-  - An Article link opens the story itself, even when it continues on another page.
+    Article's page on the site, `/items/IME/IME-1946-07-05/0001/record/172` (web#189). Typing that
+    path works too.
+  - An older View Article address (`/search?view=…`) is stored as the Article's page as well. A
+    section's address (`/sections/…`) stays a section page: the Article's page, opened at that
+    section.
+  - An Article link opens the story on its own page, even when it continues on another page of the
+    paper.
   - Use a page link (`/read/IME/IME-1946-07-05/1`) only when the point is the whole page, such as
     its layout or everything printed on it.
   - The same applies to links in the text and to `sources`.
@@ -142,7 +146,7 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
 | `title` | yes | At most 120 characters |
 | `date` | yes | `YYYY-MM-DD`, when the post is listed |
 | `summary` | yes | At most 300 characters. Used on the index, in link previews, search results and RSS. |
-| `sources` | yes | One or more `{url, label}` entries. `url` is an Article (its copy-link address, or `/search?view=…`) or, for a whole page, `/read/…`. `label` is "Paper, date: headline". |
+| `sources` | yes | One or more `{url, label}` entries. `url` is an Article (its copy-link address, or `/items/…`) or, for a whole page, `/read/…`. `label` is "Paper, date: headline". |
 | `image`, `image_alt` | together | Share image in `images/<file-name>/`. The site's social card is the default. |
 | `updated` | no | On or after `date` |
 | `tags` | no | Up to 12. Each links to the blog's posts with that tag (`/blog?tag=…`). Use words of letters, digits, hyphens, apostrophes, full stops or `&`, with single spaces, at most 40 characters ("St. John's", "Laxey & Lonan"). Case doesn't matter, so keep one spelling. The check refuses any other tag. |
@@ -171,8 +175,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `6c58f51` (the squash merge of
-web#190: printed captions and highlighter bands, web#183). Web squash-merges, so record the commit on
+until this copy is updated. The current copy is from web `main` at `79f1f89` (the squash merge of
+web#192: numbered clipping links and a safer caption cut, after web#191's Article pages, web#189). Web squash-merges, so record the commit on
 web `main`, not a pull request's head.
 
 ## Publishing safeguards

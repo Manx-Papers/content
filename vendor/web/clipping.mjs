@@ -15,6 +15,18 @@ import {API_ORIGIN, MEDIA_ORIGIN, isMediaPath} from './proxy.mjs';
 
 // Long sections are cut here in "Read the text"; the rest is one click away in View Article.
 export const MAX_TEXT = 20000;
+// A photograph's printed caption is cut at a word after this many characters (review of web#190).
+export const MAX_PRINTED = 400;
+// Cut text to at most max characters plus "…": back to the last whole word, unless that would lose
+// more than CUT_SLACK characters (a very long "word", such as a misread run), then at max itself.
+// Never between the two halves of a surrogate pair (review of web#192).
+const CUT_SLACK = 40;
+export function cutText(text, max) {
+  if (text.length <= max) return text;
+  const end = /[\uD800-\uDBFF]/.test(text[max - 1]) ? max - 1 : max, head = text.slice(0, end);
+  const word = /\s/.test(text[end]) ? head : head.replace(/\s+\S*$/, '');
+  return ((word.trim() && word.length >= end - CUT_SLACK ? word : head).trimEnd()) + '…';
+}
 // Sections are read in parallel; a 503 (busy) answer is retried after a short wait. All of a post's
 // clippings share one time budget; any not read by then show the placeholder.
 const BUDGET_MS = 10000, TIMEOUT_MS = 6000, BUSY_WAITS_MS = [250, 500, 1000];
@@ -44,7 +56,9 @@ function limiter(limit) {
 const longDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date ?? '')
   ? new Intl.DateTimeFormat('en-GB', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'}).format(new Date(date + 'T00:00:00Z'))
   : '';
-export const viewURL = id => '/search?view=' + encodeURIComponent(id);
+// web#189: a clipping opens its Article's own page, at the clipping's section (section IDs have a
+// /block/ part). The one place the clipping link target is set.
+export const viewURL = id => (/\/(?:block|section)\//.test(id) ? '/sections/' : '/items/') + id;
 
 // Markers for highlighted spans while the text is tidied (private-use characters: never in OCR text).
 const OPEN = '', CLOSE = '';
@@ -126,6 +140,7 @@ export function clippingLayout(doc, clip) {
   const printed = doc.content_type === 'picture' && role(section) !== 'Caption'
     ? readableText(itemSections.filter(s => s?.id !== section.id && role(s) === 'Caption' && validSpan(s.span, itemText))
       .map(s => itemText.slice(s.span[0], s.span[1])).join('\n\n')).join(' ') : '';
+  const printedShort = cutText(printed, MAX_PRINTED);
   const citation = doc.citation ?? {};
   const record = typeof section.item?.id === 'string' ? section.item.id : '';
   const [title, issue] = clip.id.split('/');
@@ -133,7 +148,7 @@ export function clippingLayout(doc, clip) {
   const readIssue = date && issue === title + '-' + date ? date : issue;
   return {
     W, H, path, preview: preview !== path && isMediaPath(preview) ? preview : '', polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
-    bands: bands(hits, itemText), printed,
+    bands: bands(hits, itemText), printed: printedShort,
     picture: doc.content_type === 'picture',
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
@@ -209,7 +224,8 @@ function scanHTML(clip, layout, alt, n, {lazy = true} = {}) {
     + marks + '</span><span class="sr-only"> (opens the whole article)</span></a>';
 }
 
-function textHTML(clip, layout) {
+// name: the clipping's name for its links, made unique in the post (see renderClippings).
+function textHTML(clip, layout, name = clip.alt) {
   if (clip.override) {
     const label = clip.override.kind === 'description' ? 'Description' : 'Read the text';
     const note = clip.override.kind === 'description' ? '' : '<p class="blog-clipping-note">Text checked by the author.</p>';
@@ -225,7 +241,7 @@ function textHTML(clip, layout) {
   }
   if (!paragraphs.length) return '';
   return '<details class="blog-clipping-text"><summary>Read the text</summary>' + paragraphs.join('')
-    + '<p class="blog-clipping-note">' + (cut ? 'The text continues in <a href="' + escapeHTML(viewURL(clip.id)) + '">View article</a>. ' : '')
+    + '<p class="blog-clipping-note">' + (cut ? 'The text continues in <a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(name) + '</span></a>. ' : '')
     + 'Text read from the scan by machine, so it may contain errors.</p></details>';
 }
 
@@ -233,26 +249,32 @@ function textHTML(clip, layout) {
 // caption (a photograph's), then where it was printed with a link to the full page. The clipping
 // itself links to the whole Article, so the caption has no second link there (except in the
 // placeholder, which has no clipping). The paper and date are said here only, not in the alt text.
-function captionHTML(clip, layout) {
+// Its parts are separated by a space as well as by layout, so they read apart without the stylesheet
+// (reader mode, copied text). The printed caption is machine-read text, and says so.
+function captionHTML(clip, layout, name = clip.alt) {
   const where = layout ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ') : '';
   const links = layout
-    ? (layout.fullPage ? '<a href="' + escapeHTML(layout.fullPage) + '">Full page<span class="sr-only">: ' + escapeHTML(clip.alt) + '</span></a>' : '')
-    : '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(clip.alt) + '</span></a>';
-  return '<figcaption>' + (clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '')
-    + (layout?.printed ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed) + '</span>' : '')
-    + '<span class="blog-clipping-source">' + [where, links].filter(Boolean).join(' · ') + '</span></figcaption>';
+    ? (layout.fullPage ? '<a href="' + escapeHTML(layout.fullPage) + '">Full page<span class="sr-only">: ' + escapeHTML(name) + '</span></a>' : '')
+    : '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(name) + '</span></a>';
+  return '<figcaption>' + [clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '',
+    layout?.printed ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed)
+      + ' <span class="blog-clipping-machine">(read by machine)</span></span>' : '',
+    '<span class="blog-clipping-source">' + [where, links].filter(Boolean).join(' · ') + '</span>'].filter(Boolean).join(' ') + '</figcaption>';
 }
 
 // A clipping is its figure (the clipping and its caption), then "Read the text". A figcaption must be
 // the figure's first or last child, so the text follows the figure inside the clipping's wrapper.
 export function clippingHTML(clip, layout, n, options) {
+  const name = options?.name ?? clip.alt;
   if (!layout) {
     return '<div class="blog-clipping blog-clipping-unavailable"><figure>'
       + '<p class="blog-clipping-missing">This clipping can’t be shown just now: “' + escapeHTML(clip.alt) + '”.</p>'
-      + captionHTML(clip, null) + '</figure>' + textHTML(clip, null) + '</div>';
+      + captionHTML(clip, null, name) + '</figure>' + textHTML(clip, null, name) + '</div>';
   }
-  const alt = 'Clipping: "' + clip.alt + '"' + (layout.hits.length ? ', highlighting “' + clip.highlight.replace(/"/g, '') + '”' : '');
-  return '<div class="blog-clipping"><figure>' + scanHTML(clip, layout, alt, n, options) + captionHTML(clip, layout) + '</figure>' + textHTML(clip, layout) + '</div>';
+  // Clippings sharing a headline are numbered in their image link's name too (review of web#192).
+  const number = name !== clip.alt && name.startsWith(clip.alt) ? name.slice(clip.alt.length) : '';
+  const alt = 'Clipping: "' + clip.alt + '"' + number + (layout.hits.length ? ', highlighting “' + clip.highlight.replace(/"/g, '') + '”' : '');
+  return '<div class="blog-clipping"><figure>' + scanHTML(clip, layout, alt, n, options) + captionHTML(clip, layout, name) + '</figure>' + textHTML(clip, layout, name) + '</div>';
 }
 
 // Replaces the renderer's <!--clipping:N--> markers. Never throws: a clipping that can't be drawn
@@ -290,12 +312,16 @@ export async function renderClippings(html, clippings, env, {budget = BUDGET_MS,
       return null;
     }
   }));
-  const pages = new Set();
+  const pages = new Set(), alts = new Map(), seen = new Map();
+  for (const clip of clippings) alts.set(clip.alt, (alts.get(clip.alt) ?? 0) + 1);
   const figures = clippings.map((clip, i) => {
     const layout = layouts[i], src = layout && (layout.preview || layout.path);
     const lazy = !pages.has(src);
     if (src) pages.add(src);
-    return clippingHTML(clip, layout, i + 1, {lazy});
+    // Clippings sharing a headline get their links told apart: "Full page: Rider weds (2)".
+    seen.set(clip.alt, (seen.get(clip.alt) ?? 0) + 1);
+    const name = alts.get(clip.alt) > 1 ? clip.alt + ' (' + seen.get(clip.alt) + ')' : clip.alt;
+    return clippingHTML(clip, layout, i + 1, {lazy, name});
   });
   return html.replace(/<!--clipping:(\d+)-->/g, (_, i) => figures[Number(i)] ?? '');
 }

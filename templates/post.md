@@ -20,12 +20,12 @@ sources:
     label: "Isle of Man Examiner, 5 July 1946: front page"
 ---
 Open with the story. Link every factual claim to the Article it comes from, like
-[the Examiner asked](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172). Link a whole page,
+[the Examiner asked](/items/IME/IME-1946-07-05/0001/record/172). Link a whole page,
 like [the front page](/read/IME/IME-1946-07-05/1), only when the point is the page itself.
 
 ## A heading (use ##, the title is the only top-level heading)
 
-Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172), lists and quotes.
+Plain Markdown: **bold**, *italic*, [links](/items/IME/IME-1946-07-05/0001/record/172), lists and quotes.
 
 - A list item
 - Another
