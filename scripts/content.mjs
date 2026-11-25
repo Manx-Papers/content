@@ -6,6 +6,7 @@ import {join} from 'node:path';
 import {parsePost} from './frontmatter.mjs';
 import {postMeta, SLUG} from '../vendor/web/blog.mjs';
 import {renderMarkdown, IMAGE_FILE} from '../vendor/web/markdown.mjs';
+import {sectionURL} from '../vendor/web/clipping.mjs';
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const unescapeHTML = text => text.replace(/&(amp|lt|gt|quot|#39);/g, (_, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"})[e]);
@@ -28,7 +29,10 @@ export function sitePath(url) {
 }
 // The same for link and image targets in the text: ](https://beta.manxpapers.com/…) and ](/items/…).
 const BODY_LINK = /\]\((https:\/\/(?:beta\.|www\.)?manxpapers\.com\/[^\s)]*|\/(?:items|sections)\/[A-Za-z0-9_/-]+)(?=[\s)])/g;
-export const bodyPaths = body => body.replace(BODY_LINK, (_, url) => '](' + sitePath(url));
+// web#183: a clipping names its section after section:. The section's copy-link address pasted there
+// (section:https://beta.manxpapers.com/sections/<id>, or section:/sections/<id>) is stored as section:<id>.
+const CLIPPING_LINK = /\]\(section:(?:https:\/\/(?:beta\.|www\.)?manxpapers\.com)?\/sections\/([A-Za-z0-9_/-]+)(?=[\s)?])/g;
+export const bodyPaths = body => body.replace(BODY_LINK, (_, url) => '](' + sitePath(url)).replace(CLIPPING_LINK, '](section:$1');
 const MAGIC = {
   jpg: b => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
   png: b => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -38,8 +42,8 @@ MAGIC.jpeg = MAGIC.jpg;
 
 const list = async dir => { try { return await readdir(dir, {withFileTypes: true}); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } };
 
-// Checks one post's text. Returns {post, figures, errors, warnings}; post is the stored JSON when
-// valid. Warnings (a source without a label) are reported but don't fail the check.
+// Checks one post's text. Returns {post, figures, clippings, errors, warnings}; post is the stored
+// JSON when valid. Warnings (a source without a label) are reported but don't fail the check.
 export function checkPost(slug, source) {
   const errors = [], warnings = [];
   if (slug.length > 80 || !SLUG.test(slug)) return {warnings: [], errors: ['file name must be lower-case words joined by hyphens (a-z, 0-9), at most 80 characters']};
@@ -63,7 +67,7 @@ export function checkPost(slug, source) {
   }
   // Links and figures are read from what the Worker's renderer actually emits, so every form it
   // accepts (a bare file name, /blog/images/<slug>/<file>, inside a quote) is checked.
-  const {html, problems} = renderMarkdown(body, {slug});
+  const {html, problems, clippings} = renderMarkdown(body, {slug});
   for (const problem of problems) errors.push('text: ' + problem);
   const hrefs = [...html.matchAll(/<a href="([^"]*)">/g)].map(m => unescapeHTML(m[1]));
   if (!hrefs.some(archiveHref)) errors.push('text: link at least one claim to the archive, e.g. [the report](/read/IME/IME-1854-09-29/3)');
@@ -71,15 +75,61 @@ export function checkPost(slug, source) {
   for (const [, src] of html.matchAll(/<img src="([^"]*)"/g)) {
     const m = /^\/blog\/images\/([^/]+)\/([^/]+)$/.exec(unescapeHTML(src));
     if (m && m[1] === slug && IMAGE_FILE.test(m[2])) figures.push(m[2]);
-    // The Worker can show archive page images, but their reuse rights are still open (Control #244).
-    else if (unescapeHTML(src).startsWith('/media/')) errors.push('text: archive page images (' + unescapeHTML(src) + ") aren't allowed in posts yet; use an image in images/" + slug + '/');
+    // Archive page images (/media/…) never get this far: the renderer refuses them and points to
+    // section: clippings (web#183), which the Worker draws from the archive and nothing here stores.
     else errors.push('text: image ' + unescapeHTML(src) + ' is not in images/' + slug + '/');
   }
-  return {post: errors.length ? null : raw, figures, errors, warnings};
+  return {post: errors.length ? null : raw, figures, clippings, errors, warnings};
+}
+
+// web#183: each clipping is looked up in the archive, as the site will look it up, so the writer hears
+// before merge about a section that isn't there or a highlight that finds nothing. Highlights match
+// the text as the archive read it (OCR), not the true spelling, so a correctly spelt word can miss.
+// These are warnings, never silent: when the archive can't be asked, that is a warning too.
+// Each lookup gets at most 15 s, and all of them share one deadline (60 s for the whole check), so an
+// archive that hangs rather than refusing can't hold the job until CI times it out. Lookups left when
+// the time is up become "couldn't check" warnings. A lookup that ignores its abort signal is still
+// abandoned at its time limit.
+const SECTION_TIMEOUT_MS = 15000;
+export const ARCHIVE_BUDGET_MS = 60000;
+const couldNot = (clip, why) => 'clipping ' + clip.id + ": couldn't check it in the archive (" + why + '); check it on the preview';
+export async function checkClippings(clippings, fetchSection = fetch, {deadline = Date.now() + ARCHIVE_BUDGET_MS} = {}) {
+  const warnings = [], seen = new Set();
+  for (const clip of clippings) {
+    const url = sectionURL(clip.id, clip.highlight);
+    if (seen.has(url)) continue;
+    seen.add(url);
+    const left = deadline - Date.now();
+    if (left <= 0) { warnings.push(couldNot(clip, 'the archive check ran out of time')); continue; }
+    const limit = Math.min(SECTION_TIMEOUT_MS, left);
+    const controller = new AbortController();
+    let timer;
+    const timedOut = new Promise((_, reject) => { timer = setTimeout(() => {
+      const error = new Error('no answer within ' + Math.ceil(limit / 1000) + ' s');
+      controller.abort(error);
+      reject(error);
+    }, limit); });
+    let response, doc;
+    try {
+      response = await Promise.race([timedOut, fetchSection(url, {headers: {accept: 'application/json'}, signal: controller.signal})]);
+      if (response.ok) doc = await Promise.race([timedOut, response.json()]);
+    } catch (error) {
+      warnings.push(couldNot(clip, error?.message ?? error));
+      continue;
+    } finally { clearTimeout(timer); }
+    if (response.status === 404) { warnings.push('clipping ' + clip.id + ": the archive has no such section; the site will say the clipping can't be shown"); continue; }
+    if (!response.ok || doc?.section?.id !== clip.id) { warnings.push(couldNot(clip, 'status ' + response.status)); continue; }
+    const block = doc.section.source_block_id;
+    if (clip.highlight && !(doc.hit_geometry ?? []).some(hit => hit?.block_id === block))
+      warnings.push('clipping ' + clip.id + ': highlight "' + clip.highlight + '" matches nothing in the text the archive read for this section,'
+        + ' so nothing will be highlighted. Highlights match the recognised text (see "Read the text"), not the true spelling.');
+  }
+  return warnings;
 }
 
 // Validates the whole repository. Returns {posts, images, errors, warnings}, each "path: message".
-export async function validate(root) {
+// archive: false skips the archive lookups (the publish build, which runs after the check passed).
+export async function validate(root, {archive = true, fetchSection = fetch, archiveBudgetMs = ARCHIVE_BUDGET_MS} = {}) {
   const errors = [], warnings = [], posts = [], images = [];
   const slugs = new Set();
   for (const entry of await list(join(root, 'posts'))) {
@@ -108,6 +158,9 @@ export async function validate(root) {
       images.push({slug: folder.name, name: file.name, path});
     }
   }
+  const deadline = Date.now() + archiveBudgetMs;
+  if (archive) for (const {clippings, path} of posts)
+    for (const warning of await checkClippings(clippings, fetchSection, {deadline})) warnings.push(path + ': ' + warning);
   for (const {slug, post, figures, path} of posts) {
     const have = new Set(images.filter(i => i.slug === slug).map(i => i.name));
     for (const name of [...(post.image ? [post.image] : []), ...figures])
@@ -118,7 +171,7 @@ export async function validate(root) {
 
 // Writes the content store layout under out/blog: posts/<slug>.json, images/<slug>/<file>, index.json.
 export async function build(root, out) {
-  const {posts, images, errors} = await validate(root);
+  const {posts, images, errors} = await validate(root, {archive: false});
   if (errors.length) throw new Error('Content is not valid:\n' + errors.join('\n'));
   await rm(join(out, 'blog'), {recursive: true, force: true});
   await mkdir(join(out, 'blog', 'posts'), {recursive: true});
