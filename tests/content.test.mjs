@@ -155,13 +155,20 @@ test('publishing order: images and posts, then the index, then deletion, only un
     assert.doesNotMatch(r.stdout + r.stderr, /very-secret-value/);
     const endpoint = 's3 --endpoint-url https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com --only-show-errors ';
     const steps = (await calls()).map(line => line.replace(/\/tmp\/tmp\.[A-Za-z0-9]+/g, 'OUT')).map(c => { assert.ok(c.startsWith(endpoint), c); return c.slice(endpoint.length); });
-    // This repository has no images yet, so the image sync is skipped.
-    assert.equal(steps.length, 3, steps.join('\n'));
-    assert.match(steps[0], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
-    assert.match(steps[1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
-    assert.match(steps[2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
+    // Include the image sync whenever the checked-out repository contains post images.
+    const imageDir = join(root, 'images');
+    const folders = (await readdir(imageDir, {withFileTypes: true})).filter(e => e.isDirectory());
+    let imageCount = 0;
+    for (const folder of folders) imageCount += (await readdir(join(imageDir, folder.name))).filter(n => /\.(?:jpg|jpeg|png|webp)$/.test(n)).length;
+    const hasImages = imageCount > 0;
+    const offset = hasImages ? 1 : 0;
+    assert.equal(steps.length, 3 + offset, steps.join('\n'));
+    if (hasImages) assert.match(steps[0], /^sync OUT\/blog\/images s3:\/\/manxpapers-content\/blog\/images$/);
+    assert.match(steps[offset], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
+    assert.match(steps[offset + 1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
+    assert.match(steps[offset + 2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
     const postCount = (await readdir(join(root, 'posts'))).filter(f => f.endsWith('.md')).length;
-    assert.match(r.stdout, new RegExp('Published ' + postCount + ' post\\(s\\) and 0 image\\(s\\) to manxpapers-content/blog/'));
+    assert.match(r.stdout, new RegExp('Published ' + postCount + ' post\\(s\\) and ' + imageCount + ' image\\(s\\) to manxpapers-content/blog/'));
     await rm(log, {force: true});
 
     // A run whose commit is no longer main's tip (re-run of an old run, or overtaken) publishes nothing.
@@ -183,7 +190,7 @@ test('publishing order: images and posts, then the index, then deletion, only un
     const plain = run({PATH: shadow.replaceAll('\\', '/').replace(/^([A-Za-z]):/, (_, d) => '/' + d.toLowerCase()) + ':' + process.env.PATH});
     assert.equal(plain.status, 0, plain.stdout + plain.stderr);
     assert.deepEqual(await calls(), [], 'AWS_CLI ignored outside the harness');
-    assert.equal((await readFile(log + '.path', 'utf8')).trim().split('\n').length, 3, 'the aws on PATH ran instead');
+    assert.equal((await readFile(log + '.path', 'utf8')).trim().split('\n').length, 3 + offset, 'the aws on PATH ran instead');
   } finally { await rm(bin, {recursive: true, force: true}); }
 });
 
