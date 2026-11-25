@@ -33,22 +33,62 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
   the post's address:
   - it uses lower-case words joined by hyphens, for example `posts/laxey-wheel.md` → `/blog/laxey-wheel`;
   - don't rename a post once it's published.
-- **Pictures from the archive.** The owner has decided that posts can show newspaper clippings from
-  the archive; showing them is the main reason for the blog.
-  - Clippings will be embedded by naming the Article, without copying any files. That arrives after
-    the first blog release (web#183).
-  - Until then, archive images can't be used in posts: the check refuses `/media/…` images with a
-    clear message.
-  - **Every clipping must work without seeing it.** Under each clipping the site will show a
-    "Read the text" section with the Article's text, which screen readers and anyone who finds old
-    print hard to read can open. The text comes from the archive automatically.
-    - The image's alt text is short: what it is, the paper and the date, for example
-      `Clipping: "Lifeboat called out in gale", Isle of Man Times, 12 March 1912`. Don't paste the
-      article into the alt text.
-    - Check the text the site will show. If the automatic reading has obvious mistakes, give a
-      corrected version with the clipping (the exact form arrives with web#183).
-    - A clipping that is mainly a picture, an advert or a photograph has little useful text. Give
-      it a fuller description of what it shows instead.
+- **Clippings from the archive.** Showing newspaper clippings is the main reason for the blog. Nothing
+  is copied: the site draws each clipping from the page scan every time the post is read (web#183).
+  - **A clipping is one section of a page** (a headline, a paragraph, a photograph), not a whole
+    Article. Build the story from the sections you want: the headline, then a key paragraph, then
+    the photo. Each shows exactly that section's outline, so nothing from the stories around it
+    shows, and clicking it opens the whole Article.
+  - Put each clipping on a line of its own: `![` + its headline in a few words + `](section:` + the
+    section ID + `)`, with an optional caption in quotes:
+
+    ```markdown
+    ![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000 "A T.T. rider marries.")
+    ```
+
+  - The section ID is the part of the section's copy-link address after `/sections/`, for example
+    `IMT/IMT-1954-04-24/0006/block/R00100-B000`. Pasting the whole address after `section:` also
+    works; the check stores it as the section ID.
+  - Up to 30 clippings a post; not inside a `>` quote. Archive page images (`/media/…`) are refused:
+    use a clipping.
+  - **Highlighting words.** Add `?highlight=` and the words, joined by `+` as in a search address.
+    Put a phrase in quote marks:
+
+    ```markdown
+    ![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000?highlight=rider+weds)
+    ![The service](section:IMT/IMT-1954-04-24/0006/block/R00245-B000?highlight="Rev.+B.+Kelly")
+    ```
+
+    The words are marked on the clipping and in its "Read the text", and named in its alt text.
+  - **Highlights match the text as the archive read it, not the true spelling.** The archive's text
+    comes from automatic reading of the scan (OCR), so a word can be misread (for example "rn"
+    read for "m"). A highlight only finds the words as they were read, and whole words
+    only ("marry" does not find "married"). Open "Read the text" on the preview and copy the words
+    from there. The check looks each clipping up in the archive and **warns** when a highlight
+    finds nothing in that section, or when the section isn't in the archive. A warning doesn't stop
+    the post, but nothing will be highlighted, so fix or remove the highlight. If the archive can't
+    be reached, the check says so: check the clipping on the preview instead.
+  - **Every clipping must work without seeing it.** The site adds the paper and date to the alt
+    text, for example `Clipping: "Clubman's T.T. rider weds", Isle of Man Times, 24 April 1954`, so
+    give only the headline. Don't paste the article into it. Under the clipping the site shows "Read
+    the text", the section's text from the archive, for screen readers and anyone who finds old
+    print hard to read.
+    - Check that text on the preview. If the automatic reading has obvious mistakes, give a
+      corrected version straight after the clipping line, between `::: text` and `:::`:
+
+      ```markdown
+      ![The wedding](section:IMT/IMT-1954-04-24/0006/block/R00100-B001)
+      ::: text
+      Clubman T.T. competitor Gwilym Owen (only son of Mr and Mrs R. Owen, of Brunswick Road) was
+      married on Thursday last at Kirk Braddan…
+      :::
+      ```
+
+    - Highlights still show on the clipping, but your corrected text has no marks.
+    - A photograph or other picture has no text to read. Give a fuller description of what it shows
+      instead, between `::: description` and `:::`; without one there is no "Read the text".
+    - If the archive can't be reached when the post is read, the site says the clipping can't be
+      shown just now and keeps the caption, a View article link and any text you gave.
 - **Other pictures** (modern photos, postcards and so on) go in `images/<file-name>/`:
   - `.jpg`, `.png` or `.webp`, up to 5 MB each;
   - every image needs alt text, and can have a caption.
@@ -108,16 +148,16 @@ tests with `node --test tests/*.test.mjs`.
 - **The website side** is web's `BLOG` R2 binding to the same bucket (read-only use).
 
 ## The rules are the website's own
-`vendor/web/` holds unchanged copies of the Web Worker's `blog.mjs`, `markdown.mjs`, `proxy.mjs` and
-`security.mjs`, pinned by hash in `vendor/web/VENDOR.json`. When those change in
+`vendor/web/` holds unchanged copies of the Web Worker's `blog.mjs`, `clipping.mjs`, `markdown.mjs`,
+`proxy.mjs` and `security.mjs`, pinned by hash in `vendor/web/VENDOR.json`. When those change in
 `Manx-Papers/web`:
-1. copy all four again;
+1. copy all five again;
 2. update the commit and hashes;
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `973d985`, the merge of web#185
-("Stories from the Archive" and the AI line "Written with AI assistance.").
+until this copy is updated. The current copy is from web `0acebcb`, the head of web#188 (archive
+clippings, web#183); it becomes web `main` when that pull request merges.
 
 ## Publishing safeguards
 - `main` is protected: changes arrive only by pull request with the owner's approval and a passing
