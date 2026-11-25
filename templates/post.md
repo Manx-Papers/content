@@ -20,21 +20,34 @@ sources:
     label: "Isle of Man Examiner, 5 July 1946: front page"
 ---
 Open with the story. Link every factual claim to the Article it comes from, like
-[the Examiner asked](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172). Link a whole page,
+[the Examiner asked](/items/IME/IME-1946-07-05/0001/record/172). Link a whole page,
 like [the front page](/read/IME/IME-1946-07-05/1), only when the point is the page itself.
 
 ## A heading (use ##, the title is the only top-level heading)
 
-Plain Markdown: **bold**, *italic*, [links](/search?view=IME%2FIME-1946-07-05%2F0001%2Frecord%2F172), lists and quotes.
+Plain Markdown: **bold**, *italic*, [links](/items/IME/IME-1946-07-05/0001/record/172), lists and quotes.
 
 - A list item
 - Another
 
+Show what a paper said with a newspaper clipping, highlighting the key words, rather than quoting
+it. A clipping is one section of a page: its headline in a few words, then `section:` and the
+section ID (the part of the section's copy-link address after `/sections/`). Highlight words with
+`?highlight=word+word`, spelt as in the archive's "Read the text". The site adds the paper and date,
+and a "Read the text" section under it. Correct that text, if it needs it, in a `::: text` block
+straight after the clipping (`::: description` for a picture); see the README.
+
+![Clubman's T.T. rider weds](section:IMT/IMT-1954-04-24/0006/block/R00100-B000?highlight=rider+weds "Optional caption")
+::: text
+CLUBMAN'S T.T. RIDER WEDS
+:::
+
+Quote only when no clipping can do it, such as words that run across several sections. Keep it short
+and exact:
+
 > A short quotation from the paper.
 
 A picture that isn't from the archive, such as a modern photo or a postcard, goes in `images/<file-name>/`
-with alt text and an optional caption. Newspaper clippings from the archive can't be used yet; when
-they arrive, each one gets short alt text (what it is, the paper and the date) and the site adds a
-"Read the text" section under it for screen readers and anyone who finds old print hard to read.
+with alt text and an optional caption.
 
 ![Alt text describing the image](laxey-wheel.jpg "Optional caption")

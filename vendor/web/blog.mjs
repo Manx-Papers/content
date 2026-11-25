@@ -5,6 +5,7 @@
 // before today (Isle of Man time); a post page is reachable by its URL whatever its date.
 // Without a BLOG binding every blog URL is 404 and the sitemap lists the core pages only.
 import {escapeHTML, renderMarkdown, IMAGE_FILE} from './markdown.mjs';
+import {renderClippings} from './clipping.mjs';
 
 export const PREFIX = 'blog/';
 // The page shell built by scripts/prepare.mjs; the Worker fills it and never serves it as-is.
@@ -18,6 +19,8 @@ export const FEED_SIZE = 20;
 const READ_PATH = /^\/read\/[A-Z][A-Z0-9]{1,11}\/[A-Za-z0-9_-]+\/\d{1,4}$/;
 // The site's own View Article URLs percent-encode the identifier (/search?view=IMT%2FIMT-…).
 const VIEW_PATH = /^\/search\?view=(?:[A-Za-z0-9_:/-]|%2F|%3A)+$/i;
+// web#189: an Article's own page, the address Articles are linked by from now on.
+const ARTICLE_PAGE = /^\/(?:items|sections)\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
 // Core pages listed in the sitemap alongside visible posts.
 export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/connect-ai', '/terms', '/privacy'];
 
@@ -68,7 +71,7 @@ export function postMeta(raw, {body = false} = {}) {
   if (!Array.isArray(raw.sources) || !raw.sources.length || raw.sources.length > 50) fail('sources');
   const sources = raw.sources.map(source => {
     const {url, label} = typeof source === 'string' ? {url: source} : source ?? {};
-    if (typeof url !== 'string' || !(READ_PATH.test(url) || VIEW_PATH.test(url))) fail('source ' + JSON.stringify(url));
+    if (typeof url !== 'string' || !(READ_PATH.test(url) || VIEW_PATH.test(url) || ARTICLE_PAGE.test(url))) fail('source ' + JSON.stringify(url));
     if (label !== undefined && !text(label, 200)) fail('source label');
     return {url, label: label ?? sourceLabel(url)};
   });
@@ -171,8 +174,11 @@ export function renderIndex(posts, origin, tag) {
   };
 }
 
-export function renderPost(post, origin, day) {
-  const {html} = renderMarkdown(post.body, {slug: post.slug});
+// web#183: archive clippings are read through env.API while the page is built; one that can't be
+// read becomes a placeholder figure, never an error page. A HEAD request reads nothing.
+export async function renderPost(post, origin, day, env, {head = false} = {}) {
+  const rendered = renderMarkdown(post.body, {slug: post.slug});
+  const html = await renderClippings(rendered.html, rendered.clippings, env, {read: !head});
   const scheduled = post.date > day;
   const image = post.image ? origin + '/blog/images/' + post.slug + '/' + post.image : origin + DEFAULT_IMAGE;
   const sources = post.sources.map(s => '<li><a href="' + escapeHTML(s.url) + '">' + escapeHTML(s.label) + '</a></li>').join('');
@@ -264,7 +270,7 @@ export async function handleBlog(request, env, {respond, page, now = new Date()}
     let post;
     try { post = postMeta(await object.json(), {body: true}); } catch (error) { console.error(error.message); return respond('Not found', {status: 404}); }
     if (post.slug !== slug) return respond('Not found', {status: 404});
-    return send(await page(renderPost(post, origin, day)), 'text/html; charset=utf-8');
+    return send(await page(await renderPost(post, origin, day, env, {head})), 'text/html; charset=utf-8');
   } catch (error) {
     console.error('blog store: ' + (error?.message ?? error));
     return respond('Stories are temporarily unavailable.', {status: 503, headers: {'Retry-After': '60'}});
