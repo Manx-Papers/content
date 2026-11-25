@@ -86,26 +86,39 @@ export function checkPost(slug, source) {
 // before merge about a section that isn't there or a highlight that finds nothing. Highlights match
 // the text as the archive read it (OCR), not the true spelling, so a correctly spelt word can miss.
 // These are warnings, never silent: when the archive can't be asked, that is a warning too.
+// Each lookup gets at most 15 s, and all of them share one deadline (60 s for the whole check), so an
+// archive that hangs rather than refusing can't hold the job until CI times it out. Lookups left when
+// the time is up become "couldn't check" warnings. A lookup that ignores its abort signal is still
+// abandoned at its time limit.
 const SECTION_TIMEOUT_MS = 15000;
-export async function checkClippings(clippings, fetchSection = fetch) {
+export const ARCHIVE_BUDGET_MS = 60000;
+const couldNot = (clip, why) => 'clipping ' + clip.id + ": couldn't check it in the archive (" + why + '); check it on the preview';
+export async function checkClippings(clippings, fetchSection = fetch, {deadline = Date.now() + ARCHIVE_BUDGET_MS} = {}) {
   const warnings = [], seen = new Set();
   for (const clip of clippings) {
     const url = sectionURL(clip.id, clip.highlight);
     if (seen.has(url)) continue;
     seen.add(url);
+    const left = deadline - Date.now();
+    if (left <= 0) { warnings.push(couldNot(clip, 'the archive check ran out of time')); continue; }
+    const limit = Math.min(SECTION_TIMEOUT_MS, left);
+    const controller = new AbortController();
+    let timer;
+    const timedOut = new Promise((_, reject) => { timer = setTimeout(() => {
+      const error = new Error('no answer within ' + Math.ceil(limit / 1000) + ' s');
+      controller.abort(error);
+      reject(error);
+    }, limit); });
     let response, doc;
     try {
-      response = await fetchSection(url, {headers: {accept: 'application/json'}, signal: AbortSignal.timeout(SECTION_TIMEOUT_MS)});
-      if (response.ok) doc = await response.json();
+      response = await Promise.race([timedOut, fetchSection(url, {headers: {accept: 'application/json'}, signal: controller.signal})]);
+      if (response.ok) doc = await Promise.race([timedOut, response.json()]);
     } catch (error) {
-      warnings.push('clipping ' + clip.id + ": couldn't check it in the archive (" + (error?.message ?? error) + '); check it on the preview');
+      warnings.push(couldNot(clip, error?.message ?? error));
       continue;
-    }
+    } finally { clearTimeout(timer); }
     if (response.status === 404) { warnings.push('clipping ' + clip.id + ": the archive has no such section; the site will say the clipping can't be shown"); continue; }
-    if (!response.ok || doc?.section?.id !== clip.id) {
-      warnings.push('clipping ' + clip.id + ": couldn't check it in the archive (status " + response.status + '); check it on the preview');
-      continue;
-    }
+    if (!response.ok || doc?.section?.id !== clip.id) { warnings.push(couldNot(clip, 'status ' + response.status)); continue; }
     const block = doc.section.source_block_id;
     if (clip.highlight && !(doc.hit_geometry ?? []).some(hit => hit?.block_id === block))
       warnings.push('clipping ' + clip.id + ': highlight "' + clip.highlight + '" matches nothing in the text the archive read for this section,'
@@ -116,7 +129,7 @@ export async function checkClippings(clippings, fetchSection = fetch) {
 
 // Validates the whole repository. Returns {posts, images, errors, warnings}, each "path: message".
 // archive: false skips the archive lookups (the publish build, which runs after the check passed).
-export async function validate(root, {archive = true, fetchSection = fetch} = {}) {
+export async function validate(root, {archive = true, fetchSection = fetch, archiveBudgetMs = ARCHIVE_BUDGET_MS} = {}) {
   const errors = [], warnings = [], posts = [], images = [];
   const slugs = new Set();
   for (const entry of await list(join(root, 'posts'))) {
@@ -145,8 +158,9 @@ export async function validate(root, {archive = true, fetchSection = fetch} = {}
       images.push({slug: folder.name, name: file.name, path});
     }
   }
+  const deadline = Date.now() + archiveBudgetMs;
   if (archive) for (const {clippings, path} of posts)
-    for (const warning of await checkClippings(clippings, fetchSection)) warnings.push(path + ': ' + warning);
+    for (const warning of await checkClippings(clippings, fetchSection, {deadline})) warnings.push(path + ': ' + warning);
   for (const {slug, post, figures, path} of posts) {
     const have = new Set(images.filter(i => i.slug === slug).map(i => i.name));
     for (const name of [...(post.image ? [post.image] : []), ...figures])

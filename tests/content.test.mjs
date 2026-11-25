@@ -331,6 +331,29 @@ test('web#183: the check looks each clipping up in the archive and warns, never 
   assert.deepEqual(await checkClippings([], () => { throw new Error('not called'); }), []);
 });
 
+test('web#183: an archive that hangs gets warnings within the overall time limit, never a stuck job', async () => {
+  const S = 'IMT/IMT-1954-04-24/0006/block/';
+  const posts = {};
+  for (const n of [1, 2, 3]) posts['posts/post-' + n + '.md'] = good('', '[a](/read/IME/IME-1854-09-29/3)\n\n![Clip](section:' + S + 'R0010' + n + '-B000)');
+  const dir = await repo(posts);
+  let asked = 0;
+  // Never answers and ignores the abort signal, as a hung connection might.
+  const fetchSection = () => { asked++; return new Promise(() => {}); };
+  try {
+    const started = Date.now();
+    const result = await validate(dir, {fetchSection, archiveBudgetMs: 300});
+    const took = Date.now() - started;
+    assert.ok(took < 2000, 'finished in ' + took + ' ms');
+    assert.deepEqual(result.errors, []);
+    const clipping = result.warnings.filter(w => /clipping/.test(w));
+    assert.equal(clipping.length, 3, JSON.stringify(clipping));
+    assert.match(clipping[0], /^posts\/post-1\.md: clipping .*R00101-B000: couldn't check it in the archive \(no answer within 1 s\); check it on the preview$/);
+    assert.match(clipping[1], /R00102-B000: couldn't check it in the archive \(the archive check ran out of time\)/);
+    assert.match(clipping[2], /R00103-B000: couldn't check it in the archive \(the archive check ran out of time\)/);
+    assert.equal(asked, 1, 'nothing is asked once the time is up');
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});
+
 test('web#183: the blog-writer instructions show clippings the check accepts', async () => {
   const prompt = await readFile(join(root, 'BLOG-WRITER-PROMPT.md'), 'utf8');
   const examples = [...prompt.matchAll(/`(!\[[^\]`]+\]\(section:IMT\/[^`]+\))`/g)].map(m => m[1]);
