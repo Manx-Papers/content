@@ -37,7 +37,7 @@ Sedan chairs were once a familiar sight in London, Bath, Edinburgh and Glasgow, 
 
 In January 1816, four enterprising Douglas men had a new business proposition. Thomas Curphy, Thomas Kelly, John Curran and William Kewish had bought a sedan chair and were ready to carry customers around town. Anyone wanting the service could apply to Curphy in Strand Street, according to [their advertisement in the *Manks Advertiser*](/items/MNA/MNA-1816-02-01/0003/record/60).
 
-![Clipping: Douglas sedan-chair advertisement, Manks Advertiser, 1 February 1816](article:MNA/MNA-1816-02-01/0003/record/60 "Four Douglas men advertise their newly purchased sedan chair and give a Strand Street address for bookings.")
+![Sedan chair for hire](section:MNA/MNA-1816-02-01/0003/block/R00060-B000?highlight=SEDAN+CHAIR "Four Douglas men offer a chair for journeys around town.")
 
 ## The governor arrives in a chair
 
@@ -45,11 +45,13 @@ On Easter Monday 1824, Castletown gathered for the laying of the foundation ston
 
 It is a splendid scene - and proof that sedan chairs were not confined to Douglas. Here one formed part of a major public occasion in Castletown.
 
-![Clipping: St Mary's foundation-stone ceremony, Manx Patriot, 24 April 1824](article:MNP/MNP-1824-04-24/0003/record/43 "The account describes Lieutenant-Governor Smelt arriving at the Castletown ceremony in a sedan chair.")
+![Governor Smelt arrives](section:MNP/MNP-1824-04-24/0003/block/R00043-B000?highlight=sedan "The lieutenant-governor arrives at the Castletown ceremony in a chair.")
 
-There were physical chairs to be bought and sold, too. In November 1838, [an auction in Douglas Market Place](/items/MNH/MNH-1838-11-06/0002/record/42) offered a sedan chair in good condition alongside furniture and household goods. In September 1845, a sedan chair appeared among the possessions advertised for sale at [Government House, Castletown, following the death of Lieutenant-Governor General Ready](/items/MNB/MNB-1845-09-13/0002/record/67). Whether that was the same chair used by Smelt in 1824 is an intriguing possibility, but the advertisements do not establish a connection.
+There were physical chairs to be bought and sold, too. In November 1838, [an auction in Douglas Market Place](/items/MNH/MNH-1838-11-06/0002/record/42) offered a sedan chair in good condition alongside furniture and household goods.
 
-![Clipping: Government House sale, Manx Liberal, 13 September 1845](article:MNB/MNB-1845-09-13/0002/record/67 "A sedan chair appears in the auction of General Ready's possessions at Government House, Castletown.")
+![Douglas auction listing](section:MNH/MNH-1838-11-06/0002/block/R00042-B000?highlight=Sedan+Chair "A sedan chair in good condition appears in a Douglas auction notice.") In September 1845, a sedan chair appeared among the possessions advertised for sale at [Government House, Castletown, following the death of Lieutenant-Governor General Ready](/items/MNB/MNB-1845-09-13/0002/record/67). Whether that was the same chair used by Smelt in 1824 is an intriguing possibility, but the advertisements do not establish a connection.
+
+![Government House auction](section:MNB/MNB-1845-09-13/0002/block/R00067-B000?highlight=Sedan+Chair "A sedan chair is listed among the possessions offered for sale at Government House.")
 
 ## Fashionable Douglas - and its changing fortunes
 
@@ -57,11 +59,13 @@ Later writers remembered ladies arriving at dances and even church in sedan chai
 
 In a reminiscence [printed in *Mona's Herald* in 1931](/items/MNH/MNH-1931-09-29/0006/record/137), the Reverend W. T. Radcliffe recalled balls attended by ladies in their sedan chairs. The paper gave the passage a wonderfully direct subheading: **"TO THE BALL BY SEDAN CHAIR."**
 
+![To the ball by sedan chair](section:MNH/MNH-1931-09-29/0006/block/R00137-B003?highlight=SEDAN+CHAIR "A recollection of ladies travelling to balls in their sedan chairs.")
+
 Even more surprising is the [*Isle of Man Times* account from 1933](/items/IMT/IMT-1933-01-21/0002/record/22), which recalled **Shaw's Brow and South Quay** as fashionable places to live in the earlier nineteenth century. The writer named the Wellington Assembly Rooms in Fort Street and Dixon's in the Market Place as venues where ladies arrived at balls in sedan chairs. A [1955 retrospective](/items/IMT/IMT-1955-08-05/0006/record/90) likewise remembered sedan chairs at dances in the Assembly Room.
 
 That description of Shaw's Brow sounds startling today. But the writer was recalling an earlier Douglas, not describing conditions in 1933. The neighbourhood's history was far from uniformly genteel: [Manx National Heritage documents the terrible conditions of the later slums](https://manxnationalheritage.im/learn/family-learning/exploring-primary-evidence/douglas-medicine-trail/little-hell-and-the-douglas-slums/), including **“Little Hell”**, which lay between Shaw's Brow and Barrack Street. The fashionable reminiscence and the later history of poverty belong to different periods and must not be confused. Nor does a fashionable address mean everyone in the surrounding streets lived comfortably.
 
-![Clipping: The Douglas That Was, Isle of Man Times, 21 January 1933](article:IMT/IMT-1933-01-21/0002/record/22 "The feature recalls sedan chairs at Douglas balls and places the fashionable households in Shaw's Brow and South Quay.")
+![Old Douglas and its balls](section:IMT/IMT-1933-01-21/0002/block/R00022-B005?highlight=Sedan+chairs "A later writer remembers sedan chairs taking ladies to balls in old Douglas.")
 
 The 1933 writer suggested a reason for their persistence: Douglas's narrow, roughly surfaced streets made carriages awkward. The article quoted an 1811 description of a section of the main street measuring only seven feet across. A chair carried by people would have been rather better suited to those cramped passages, although this explanation remains the later writer's interpretation.
 
@@ -73,7 +77,7 @@ Two stories reprinted in Manx papers offer a glimpse of prices *elsewhere*. In a
 
 And the [*Manx Liberal* of December 1849](/items/MNB/MNB-1849-12-22/0004/record/27) tells a much funnier story from Dublin. A journalist named Paddy Monaghan, reputedly weighing 28 stone, hailed a sedan chair when rain threatened his best clothes. The bearers eyed their prospective load with some reluctance. When the weather cleared, he decided to walk and gave one bearer a shilling. The man protested that it was too little, even though the journey had scarcely happened. His point was that the passenger ought to pay for the **fright** he had given them.
 
-![Clipping: Compensation for a Fright, Manx Liberal, 22 December 1849](article:MNB/MNB-1849-12-22/0004/record/27 "A Dublin sedan-chair bearer demands more than a shilling for the alarm caused by an unusually heavy customer.")
+![Compensation for a fright](section:MNB/MNB-1849-12-22/0004/block/R00027-B002?highlight=shilling "An amusing Dublin anecdote about the cost of frightening two chairmen.")
 
 Neither sixpence nor a shilling is evidence of a Manx tariff. But together with the genuine local advertisements and ceremonies, these stories bring a vanished kind of transport back to life.
 
