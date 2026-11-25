@@ -19,6 +19,8 @@ export const FEED_SIZE = 20;
 const READ_PATH = /^\/read\/[A-Z][A-Z0-9]{1,11}\/[A-Za-z0-9_-]+\/\d{1,4}$/;
 // The site's own View Article URLs percent-encode the identifier (/search?view=IMT%2FIMT-…).
 const VIEW_PATH = /^\/search\?view=(?:[A-Za-z0-9_:/-]|%2F|%3A)+$/i;
+// web#189: an Article's own page, the address Articles are linked by from now on.
+const ARTICLE_PAGE = /^\/(?:items|sections)\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
 // Core pages listed in the sitemap alongside visible posts.
 export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/connect-ai', '/terms', '/privacy'];
 
@@ -69,7 +71,7 @@ export function postMeta(raw, {body = false} = {}) {
   if (!Array.isArray(raw.sources) || !raw.sources.length || raw.sources.length > 50) fail('sources');
   const sources = raw.sources.map(source => {
     const {url, label} = typeof source === 'string' ? {url: source} : source ?? {};
-    if (typeof url !== 'string' || !(READ_PATH.test(url) || VIEW_PATH.test(url))) fail('source ' + JSON.stringify(url));
+    if (typeof url !== 'string' || !(READ_PATH.test(url) || VIEW_PATH.test(url) || ARTICLE_PAGE.test(url))) fail('source ' + JSON.stringify(url));
     if (label !== undefined && !text(label, 200)) fail('source label');
     return {url, label: label ?? sourceLabel(url)};
   });
