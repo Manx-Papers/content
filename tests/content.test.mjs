@@ -160,7 +160,8 @@ test('publishing order: images and posts, then the index, then deletion, only un
     assert.match(steps[0], /^sync OUT\/blog\/posts s3:\/\/manxpapers-content\/blog\/posts --content-type application\/json$/);
     assert.match(steps[1], /^cp OUT\/blog\/index\.json s3:\/\/manxpapers-content\/blog\/index\.json --content-type application\/json$/);
     assert.match(steps[2], /^sync OUT\/blog\/ s3:\/\/manxpapers-content\/blog\/ --delete$/);
-    assert.match(r.stdout, /Published 0 post\(s\) and 0 image\(s\) to manxpapers-content\/blog\//);
+    const postCount = (await readdir(join(root, 'posts'))).filter(f => f.endsWith('.md')).length;
+    assert.match(r.stdout, new RegExp('Published ' + postCount + ' post\\(s\\) and 0 image\\(s\\) to manxpapers-content/blog/'));
     await rm(log, {force: true});
 
     // A run whose commit is no longer main's tip (re-run of an old run, or overtaken) publishes nothing.
