@@ -14,6 +14,8 @@ sources:
     label: "Isle of Man Examiner, 21 June 1940: Admiral’s tribute to Mona’s Queen"
   - url: /items/IME/IME-1940-06-28/0001/record/166
     label: "Isle of Man Examiner, 28 June 1940: Echo of loss of Mona’s Queen"
+  - url: /items/IME/IME-1940-11-22/0001/record/59
+    label: "Isle of Man Examiner, 22 November 1940: All over in ninety seconds"
 ---
 At Kallow Point in Port St Mary, a great black anchor stands overlooking the sea. Recovered from the seabed in 2010, it became the centrepiece of a memorial dedicated in 2012. Each year, people gather there to remember the Manx seafarers lost during the evacuation of 1940. The [Port St Mary RNLI's account of the annual service](https://rnli.org/news-and-media/2024/june/04/port-st-mary-rnli-attend-dunkirk-memorial-service) tells how the anchor came to rest on the Island.
 
@@ -89,6 +91,11 @@ Even before Operation Dynamo formally began, *Mona’s Queen* had been making re
 But on **29 May 1940**, *Mona’s Queen* was returning to Dunkirk under Captain A. Holkham, who had relieved Duggan for leave. As she approached the port, she struck a mine. Clucas, who survived, described the explosion that tore the vessel apart. She sank with the loss of **24 members of her crew**, including **17 from the Isle of Man**, according to the [RNLI’s account of the memorial](https://rnli.org/news-and-media/2024/june/04/port-st-mary-rnli-attend-dunkirk-memorial-service). [The *Examiner* printed the survivors' account](/items/IME/IME-1940-06-07/0001/record/0).
 
 ![Blown in two](section:IME/IME-1940-06-07/0003/block/R00084-B001?highlight="BLOWN+CLEAN+IN+TWO" "First Officer Clucas described the moments after the explosion.")
+
+![Mona’s Queen sinking](section:IME/IME-1940-11-22/0001/block/R00059-B000)
+::: description
+Two black-and-white photographs side by side. On the left, a dark plume rises from the ship, which is still upright; on the right, the vessel is lying over in the water, with smoke hanging above it.
+:::
 
 The loss was felt in homes across the Island. Weeks later, [Mrs Albert Murray spoke to the *Examiner*](/items/IME/IME-1940-06-28/0001/record/166) about her missing husband, a steward on board. Albert had already survived the sinking of the Steam Packet’s *Douglas* in the Mersey in 1923, when he had helped an unconscious stewardess to safety. During a recent visit home, he had reassured his wife about the safety of *Mona’s Queen*. Only after the sinking did she learn what risks the crew had been taking.
 
