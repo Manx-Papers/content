@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {parsePost} from '../scripts/frontmatter.mjs';
-import {checkPost, checkClippings, validate, build} from '../scripts/content.mjs';
+import {checkPost, checkClippings, validate, build, ARCHIVE_API_ORIGIN} from '../scripts/content.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]);
@@ -331,6 +331,11 @@ test('web#183: the check looks each clipping up in the archive and warns, never 
     ]);
     assert.equal(asked.length, 7, 'the same section and highlight are looked up once');
     assert.match(asked[0], /^https:\/\/[^/]+\/api\/sections\/IMT\/IMT-1954-04-24\/0006\/block\/R00100-B000\?q=rider\+weds$/);
+    // Control #264: the archive origin is passed to the vendored sectionURL (never "undefined/api/…").
+    assert.ok(asked.every(url => url.startsWith(ARCHIVE_API_ORIGIN + '/api/sections/')), JSON.stringify(asked));
+    asked.length = 0;
+    await validate(dir, {fetchSection, apiOrigin: 'https://api.example.test'});
+    assert.ok(asked.length && asked.every(url => url.startsWith('https://api.example.test/api/sections/')));
     // The publish build doesn't look anything up.
     asked.length = 0;
     await build(dir, join(dir, 'out'), {fetchSection});

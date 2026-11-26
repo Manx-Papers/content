@@ -99,12 +99,16 @@ export function checkPost(slug, source) {
 // the time is up become "couldn't check" warnings. A lookup that ignores its abort signal is still
 // abandoned at its time limit.
 const SECTION_TIMEOUT_MS = 15000;
+// The archive the check asks. Since web 8892657 (Control #264) the site takes its API origin from its
+// deployment's settings, so sectionURL needs it passed in. Posts are checked against Beta's API, which
+// serves the same archive as live; pass apiOrigin to ask another.
+export const ARCHIVE_API_ORIGIN = 'https://api-beta.manxpapers.com';
 export const ARCHIVE_BUDGET_MS = 60000;
 const couldNot = (clip, why) => 'clipping ' + clip.id + ": couldn't check it in the archive (" + why + '); check it on the preview';
-export async function checkClippings(clippings, fetchSection = fetch, {deadline = Date.now() + ARCHIVE_BUDGET_MS} = {}) {
+export async function checkClippings(clippings, fetchSection = fetch, {deadline = Date.now() + ARCHIVE_BUDGET_MS, apiOrigin = ARCHIVE_API_ORIGIN} = {}) {
   const warnings = [], seen = new Set();
   for (const clip of clippings) {
-    const url = sectionURL(clip.id, clip.highlight);
+    const url = sectionURL(clip.id, clip.highlight, apiOrigin);
     if (seen.has(url)) continue;
     seen.add(url);
     const left = deadline - Date.now();
@@ -137,7 +141,7 @@ export async function checkClippings(clippings, fetchSection = fetch, {deadline 
 
 // Validates the whole repository. Returns {posts, images, errors, warnings}, each "path: message".
 // archive: false skips the archive lookups (the publish build, which runs after the check passed).
-export async function validate(root, {archive = true, fetchSection = fetch, archiveBudgetMs = ARCHIVE_BUDGET_MS} = {}) {
+export async function validate(root, {archive = true, fetchSection = fetch, archiveBudgetMs = ARCHIVE_BUDGET_MS, apiOrigin = ARCHIVE_API_ORIGIN} = {}) {
   const errors = [], warnings = [], posts = [], images = [];
   const slugs = new Set();
   for (const entry of await list(join(root, 'posts'))) {
@@ -168,7 +172,7 @@ export async function validate(root, {archive = true, fetchSection = fetch, arch
   }
   const deadline = Date.now() + archiveBudgetMs;
   if (archive) for (const {clippings, path} of posts)
-    for (const warning of await checkClippings(clippings, fetchSection, {deadline})) warnings.push(path + ': ' + warning);
+    for (const warning of await checkClippings(clippings, fetchSection, {deadline, apiOrigin})) warnings.push(path + ': ' + warning);
   for (const {slug, post, figures, path} of posts) {
     const have = new Set(images.filter(i => i.slug === slug).map(i => i.name));
     for (const name of [...(post.image ? [post.image] : []), ...figures])

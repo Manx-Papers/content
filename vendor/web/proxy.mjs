@@ -1,14 +1,22 @@
-// Control #165 step 3: same-origin API and Media for the Beta website.
-// The browser calls /api/*, /iiif/* and /media/* on beta.manxpapers.com; this Worker forwards
-// them only through the fixed service bindings API (manxpapers-api-beta) and MEDIA
-// (manxpapers-media-beta), using the unchanged canonical upstream URLs, as the MCP, API and Media
-// Workers already do. It never fetches the public api-beta/media-beta hostnames, so the website
-// keeps working once those hostnames sit behind Cloudflare Access. There is no URL input:
+// Control #165 step 3: same-origin API and Media for the website.
+// The browser calls /api/*, /iiif/* and /media/* on the site's own host; this Worker forwards
+// them only through the service bindings API and MEDIA, using the canonical upstream URLs, as the
+// MCP, API and Media Workers already do. It never fetches the public API and Media hostnames, so
+// the website keeps working while they sit behind Cloudflare Access. There is no URL input:
 // destinations are fixed and paths are a bounded grammar of what the site actually requests.
-import {securityHeaders as betaSecurityHeaders} from './security.mjs';
+// Control #240 D1: the canonical API and Media origins are the deployment's Worker variables
+// API_ORIGIN and MEDIA_ORIGIN (config/environments.json), never constants here.
+import {securityHeaders as defaultSecurityHeaders} from './security.mjs';
 
-export const API_ORIGIN = 'https://api-beta.manxpapers.com';
-export const MEDIA_ORIGIN = 'https://media-beta.manxpapers.com';
+const ORIGIN = /^https:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+// The deployment's canonical API and Media origins. Throws if either is missing or malformed:
+// the Worker fails closed rather than guess another deployment's origins.
+export function origins(env) {
+  const api = env?.API_ORIGIN, media = env?.MEDIA_ORIGIN;
+  if (typeof api !== 'string' || !ORIGIN.test(api)) throw new Error('Worker variable API_ORIGIN is missing or malformed');
+  if (typeof media !== 'string' || !ORIGIN.test(media)) throw new Error('Worker variable MEDIA_ORIGIN is missing or malformed');
+  return {api, media};
+}
 // Every API read the site, Reader and UV make (site/app.js, site/reader.js, site/state.js).
 const API_PATH = /^\/api\/(?:catalogue|query|search|on-this-day|issues(?:\/pagination)?|calendar(?:\/year)?|(?:items|sections|pages|reader|issues)\/[A-Za-z0-9_:/.-]+)$/;
 const IIIF_PATH = /^\/iiif\/[A-Z][A-Z0-9]{1,11}\/[A-Za-z0-9_-]+\/(?:manifest|canvas\/\d{1,6})$/;
@@ -43,14 +51,14 @@ export function isProxyPath(pathname) {
   return /^\/(?:api|iiif|media)(?:\/|$)/.test(pathname);
 }
 
-// Returns {binding, url} for a supported request, or null.
-export function proxyTarget(url) {
+// Returns {binding, url} for a supported request, or null. `upstream` is origins(env).
+export function proxyTarget(url, upstream) {
   const path = url.pathname;
   if (url.href.length > 8192 || /%|\\|\/\/|\/\.\.?(?:\/|$)/.test(path)) return null;
-  if (API_PATH.test(path) || IIIF_PATH.test(path)) return {binding: 'API', url: API_ORIGIN + path + url.search};
+  if (API_PATH.test(path) || IIIF_PATH.test(path)) return {binding: 'API', url: upstream.api + path + url.search};
   // Media has no query parameters; refuse rather than drop them.
   if (isMediaPath(path) && !url.search)
-    return {binding: 'MEDIA', url: MEDIA_ORIGIN + path.slice('/media'.length)};
+    return {binding: 'MEDIA', url: upstream.media + path.slice('/media'.length)};
   return null;
 }
 
@@ -62,14 +70,14 @@ export function privateCacheControl(value) {
   return kept.length ? ['private', ...kept].join(', ') : 'private, no-cache';
 }
 
-function refusedWith(status, securityHeaders = betaSecurityHeaders, extra = {}) {
+function refusedWith(status, securityHeaders = defaultSecurityHeaders, extra = {}) {
   return new Response(null, {status, headers: {...securityHeaders, ...extra, 'Cache-Control': 'private, no-store'}});
 }
 
-export async function proxy(request, env, securityHeaders = betaSecurityHeaders) {
+export async function proxy(request, env, securityHeaders = defaultSecurityHeaders) {
   const refused = (status, extra) => refusedWith(status, securityHeaders, extra);
   if (!METHODS.includes(request.method)) return refused(405);
-  const target = proxyTarget(new URL(request.url));
+  const target = proxyTarget(new URL(request.url), origins(env));
   if (!target) return refused(404);
   const binding = env?.[target.binding];
   if (!binding || typeof binding.fetch !== 'function') return refused(503);
