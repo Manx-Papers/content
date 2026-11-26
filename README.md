@@ -175,8 +175,8 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `6c77969` (the squash merge of
-web#194: no Full page link in a clipping's caption, web#183). Web squash-merges, so record the commit on
+until this copy is updated. The current copy is from web `main` at `8892657` (the squash merge of
+web#199: deployment settings, Control #264; the archive check now passes its API origin). Web squash-merges, so record the commit on
 web `main`, not a pull request's head.
 
 ## Publishing safeguards

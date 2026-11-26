@@ -11,7 +11,7 @@
 // nothing is simply not drawn here (the content repo's check warns the writer before merge).
 // If the section cannot be loaded, the figure says so and keeps the caption and the View Article link.
 import {escapeHTML} from './markdown.mjs';
-import {API_ORIGIN, MEDIA_ORIGIN, isMediaPath} from './proxy.mjs';
+import {origins, isMediaPath} from './proxy.mjs';
 
 // Long sections are cut here in "Read the text"; the rest is one click away in View Article.
 export const MAX_TEXT = 20000;
@@ -75,8 +75,9 @@ export function markedParagraphs(text, spans) {
 }
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-export const sectionURL = (id, highlight) => API_ORIGIN + '/api/sections/' + id + (highlight ? '?' + new URLSearchParams({q: highlight}) : '');
-async function loadSection(clip, env, deadline) {
+// apiOrigin is the deployment's canonical API origin (origins(env).api, Control #240 D1).
+export const sectionURL = (id, highlight, apiOrigin) => apiOrigin + '/api/sections/' + id + (highlight ? '?' + new URLSearchParams({q: highlight}) : '');
+async function loadSection(url, env, deadline) {
   const api = env?.API;
   if (!api || typeof api.fetch !== 'function') throw new Error('no API binding');
   for (let attempt = 0; ; attempt++) {
@@ -88,7 +89,7 @@ async function loadSection(clip, env, deadline) {
     timedOut.catch(() => {});
     try {
       const response = await Promise.race([timedOut,
-        api.fetch(new Request(sectionURL(clip.id, clip.highlight), {headers: {accept: 'application/json'}, signal: controller.signal}))]);
+        api.fetch(new Request(url, {headers: {accept: 'application/json'}, signal: controller.signal}))]);
       if (response.status === 503 && attempt < BUSY_WAITS_MS.length && Date.now() + BUSY_WAITS_MS[attempt] < deadline) {
         await response.body?.cancel();
         await sleep(BUSY_WAITS_MS[attempt]);
@@ -106,13 +107,14 @@ const point = p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite
 const xywh = b => Array.isArray(b) && b.length === 4 && b.every(Number.isFinite) && b[2] > 0 && b[3] > 0;
 
 // What a clipping shows, from the API's section document, or throws when it can't be drawn.
-export function clippingLayout(doc, clip) {
+// mediaOrigin is the deployment's canonical Media origin (origins(env).media).
+export function clippingLayout(doc, clip, mediaOrigin) {
   if (doc?.missing) throw new Error('no such section');
   const section = doc?.section;
   if (!section || section.id !== clip.id) throw new Error('not the requested section');
   const image = doc.original_image ?? {};
   const W = image.width, H = image.height;
-  const path = typeof image.url === 'string' && image.url.startsWith(MEDIA_ORIGIN + '/page/') ? '/media' + image.url.slice(MEDIA_ORIGIN.length) : '';
+  const path = typeof image.url === 'string' && image.url.startsWith(mediaOrigin + '/page/') ? '/media' + image.url.slice(mediaOrigin.length) : '';
   if (!whole(W) || !whole(H) || !isMediaPath(path)) throw new Error('no page image');
   // Media's search-page preview of the same page (WebP, longest side 2200 px, same proportions).
   const preview = path.replace(/^\/media\/page\/(.+)\.(?:jpg|png)$/, '/media/search-page-preview/$1.webp');
@@ -279,6 +281,7 @@ export function clippingHTML(clip, layout, n, options) {
 export async function renderClippings(html, clippings, env, {budget = BUDGET_MS, read = true, cache} = {}) {
   if (!clippings?.length) return html;
   if (!read) return html.replace(/<!--clipping:\d+-->/g, '');
+  const upstream = origins(env);
   const deadline = Date.now() + budget, documents = new Map(), queue = limiter(MAX_PARALLEL);
   if (cache === undefined) cache = await openCache();
   const readSection = async (clip, key) => {
@@ -286,7 +289,7 @@ export async function renderClippings(html, clippings, env, {budget = BUDGET_MS,
       const kept = await cache?.match(key);
       if (kept) return await kept.json();
     } catch (error) { console.error('clipping cache: ' + (error?.message ?? error)); }
-    const doc = await queue(() => loadSection(clip, env, deadline));
+    const doc = await queue(() => loadSection(key, env, deadline));
     if (cache && (doc?.missing === true || doc?.section?.id === clip.id)) {
       try {
         await cache.put(key, new Response(JSON.stringify(doc), {headers: {'Content-Type': 'application/json',
@@ -297,10 +300,10 @@ export async function renderClippings(html, clippings, env, {budget = BUDGET_MS,
   };
   const layouts = await Promise.all(clippings.map(async clip => {
     // One read per section and highlight, however often the post shows it.
-    const key = sectionURL(clip.id, clip.highlight);
+    const key = sectionURL(clip.id, clip.highlight, upstream.api);
     if (!documents.has(key)) documents.set(key, readSection(clip, key));
     try {
-      const layout = clippingLayout(await documents.get(key), clip);
+      const layout = clippingLayout(await documents.get(key), clip, upstream.media);
       if (clip.highlight && !layout.hits.length) console.error('clipping ' + clip.id + ': highlight "' + clip.highlight + '" matches nothing in the recognised text');
       return layout;
     } catch (error) {
