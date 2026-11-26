@@ -19,6 +19,8 @@ At Kallow Point in Port St Mary, a great black anchor stands overlooking the sea
 
 It belonged to the *Mona’s Queen*. Most people who know her name know how she was lost. But there was much more to this ship's war than her last voyage.
 
+![Mona’s Queen one of the Hell Fire Squad](section:IME/IME-1940-06-07/0001/block/R00000-B001?highlight="HELL+FIRE+SQUAD")
+
 ![Mona’s Queen at sea](section:IME/IME-1940-06-07/0001/block/R00212-B000)
 ::: description
 A black-and-white photograph of the long, white-hulled Steam Packet passenger steamer Mona’s Queen, seen broadside on the water, with a dark funnel and two masts.
@@ -34,7 +36,7 @@ Only five years later, war came. As the [National Army Museum explains](https://
 
 The [*Examiner* reported](/items/IME/IME-1940-06-07/0001/record/0) that *Mona’s Queen* was taken into wartime service almost immediately. Under Captain R. Duggan, she sailed from Southampton to Cherbourg with French reservists returning from Britain. Among them, the paper noted, were men who had once travelled around the Isle of Man selling onions.
 
-![French reservists returning home](section:IME/IME-1940-06-07/0001/block/R00211-B000?highlight=sell-+ing+onions)
+![French reservists returning home](section:IME/IME-1940-06-07/0001/block/R00211-B000?highlight="Among+the+Frenchmen+on+board+were+several+who+had+tramped+the+streets+and+roads+of+the+Island.+sell-+ing+onions")
 ::: text
 than 400 yards away from the Manx vessel.
 
@@ -56,17 +58,15 @@ that on one day the Captain and his First Officer (Mr. R. Clucas) counted no les
 From May 10th to the day she disappeared beneath the waters, the Mona’s Queen was engaged on missions of special danger with three other well-known ships. Before many days had passed, this select little fleet had won the title among all naval men in the command of the “Hell Fire Squad.”
 :::
 
-![Mona’s Queen one of the Hell Fire Squad](section:IME/IME-1940-06-07/0001/block/R00000-B001?highlight="HELL+FIRE+SQUAD")
-
 ## Into burning ports
 
 Her first dash during the offensive was towards **Rotterdam**, on a mission to evacuate Dutch troops. According to [Captain Duggan's account](/items/IME/IME-1940-06-07/0001/record/0), the city was in flames and burning oil had spread across the harbour waters. The ship escaped through thick smoke and was ordered to **Ostend**.
 
-There, mines threatened the harbour entrance. A British destroyer eventually led *Mona’s Queen* in, and she took aboard refugees, shipwrecked sailors and Allied troops. There was even an unexpected Manx connection: among the passengers was Mrs Callister, who had formerly lived in Douglas.
+There, mines threatened the harbour entrance. A British destroyer eventually led *Mona’s Queen* in, and she took aboard refugees, shipwrecked sailors and Allied troops. Among the passengers was Mrs Callister, who had formerly lived in Douglas — proving that wherever a Manxman goes, he’s bound to meet someone from home.
 
 Getting out was another problem. Duggan recalled being told the harbour held fourteen feet of water when his ship drew fifteen. A naval officer assured him there was soft mud beneath the keel. The steamer edged through it and got away.
 
-![Refugees at Ostend](section:IME/IME-1940-06-07/0001/block/R00002-B002?highlight="Mrs.+Callister" "The evacuation included a former Douglas resident.")
+![Refugees at Ostend](section:IME/IME-1940-06-07/0001/block/R00002-B002?highlight="if+there+wasn’t+a+Manx+person+among+the+refugees,+an+elderly+lady+named+Mrs.+Callister+who+used+to+live+in+Douglas" "The evacuation included a former Douglas resident.")
 
 Next came the desperate struggle for **Boulogne and Calais**, two French ports on the Channel. As the Germans advanced, British forces were trying to hold the ports and prevent their facilities from falling into enemy hands intact. Newspaper accounts describe *Mona’s Queen* carrying a demolition party and a huge quantity of explosives to the French coast. Loading had taken fourteen hours; with everyone helping, the dangerous cargo was unloaded in three. The [*Isle of Man Times* placed this mission at Boulogne](/items/IMT/IMT-1940-06-08/0009/record/251), while the [*Examiner* named Calais](/items/IME/IME-1940-06-07/0001/record/0).
 
@@ -100,4 +100,4 @@ There was one final tribute. In a [letter reported on 21 June](/items/IME/IME-19
 
 *Mona’s Queen* had spent almost the whole of the first nine months of the war carrying troops, before taking on the desperate work of rescuing soldiers and civilians as the German advance closed in. Dunkirk was the last chapter of an extraordinary war service, not the beginning of it.
 
-N.B. What was it with the selling onions?
+**Follow-up research:** Did Frenchmen really go around the Isle of Man selling onions before the war?
