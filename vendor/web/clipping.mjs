@@ -76,7 +76,24 @@ export function markedParagraphs(text, spans) {
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 // apiOrigin is the deployment's canonical API origin (origins(env).api, Control #240 D1).
-export const sectionURL = (id, highlight, apiOrigin) => apiOrigin + '/api/sections/' + id + (highlight ? '?' + new URLSearchParams({q: highlight}) : '');
+// A highlight with quote marks is read as exact phrases (syntax=operators): every word of the phrase is
+// marked, common words too, and nothing outside it. Without that the API takes the words one by one,
+// leaves out common words (Control #211) and marks each word wherever it appears in the section.
+// The query is rebuilt so the operator syntax can't refuse it or change its meaning (review of web#212):
+// each quoted phrase as written, then the other words lower-cased (so OR/AND are words), without the
+// punctuation, -, |, ( or ) around them. Unbalanced quotes, or no phrase with a letter or digit, keep the
+// highlight as words, as before.
+const WORDISH = /[\p{L}\p{N}]/u;
+export function highlightQuery(highlight) {
+  const parts = highlight.split('"');
+  if (parts.length % 2 === 0) return {q: highlight};
+  const phrases = parts.filter((_, i) => i % 2).map(p => p.trim().replace(/\s+/g, ' ')).filter(p => WORDISH.test(p));
+  if (!phrases.length) return {q: highlight};
+  const words = parts.filter((_, i) => i % 2 === 0).join(' ').split(/\s+/)
+    .map(w => w.replace(/[()|]/g, '').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '').toLowerCase()).filter(w => WORDISH.test(w));
+  return {q: [...phrases.map(p => '"' + p + '"'), ...words].join(' '), syntax: 'operators'};
+}
+export const sectionURL = (id, highlight, apiOrigin) => apiOrigin + '/api/sections/' + id + (highlight ? '?' + new URLSearchParams(highlightQuery(highlight)) : '');
 async function loadSection(url, env, deadline) {
   const api = env?.API;
   if (!api || typeof api.fetch !== 'function') throw new Error('no API binding');
@@ -119,14 +136,9 @@ export function clippingLayout(doc, clip, mediaOrigin) {
   // Media's search-page preview of the same page (WebP, longest side 2200 px, same proportions).
   const preview = path.replace(/^\/media\/page\/(.+)\.(?:jpg|png)$/, '/media/search-page-preview/$1.webp');
   // The section's exact outline; a rectangle from crop_ltrb when the API gives no polygon.
-  const ltrb = section.geometry?.crop_ltrb, given = section.geometry?.polygon;
-  let polygon = Array.isArray(given) && given.length >= 3 && given.every(point) ? given
-    : Array.isArray(ltrb) && ltrb.length === 4 && ltrb.every(Number.isFinite) ? [[ltrb[0], ltrb[1]], [ltrb[2], ltrb[1]], [ltrb[2], ltrb[3]], [ltrb[0], ltrb[3]]] : null;
-  if (!polygon) throw new Error('no outline');
-  polygon = polygon.map(([x, y]) => [Math.min(W, Math.max(0, x)), Math.min(H, Math.max(0, y))]);
-  const L = Math.floor(Math.min(...polygon.map(p => p[0]))), T = Math.floor(Math.min(...polygon.map(p => p[1])));
-  const R = Math.ceil(Math.max(...polygon.map(p => p[0]))), B = Math.ceil(Math.max(...polygon.map(p => p[1])));
-  if (R - L < 1 || B - T < 1) throw new Error('empty outline');
+  const own = outline(section.geometry, W, H);
+  if (!own) throw new Error('no outline');
+  const {polygon, bounds: [L, T, R, B]} = own;
   // Word boxes in this section only. Their offsets are in the Item's text; the section's span in it
   // places them in the section's own text, and a mark is kept only where the two texts agree.
   const hits = (Array.isArray(doc.hit_geometry) ? doc.hit_geometry : []).filter(h => h?.block_id === section.source_block_id && xywh(h.box))
@@ -143,11 +155,18 @@ export function clippingLayout(doc, clip, mediaOrigin) {
     ? readableText(itemSections.filter(s => s?.id !== section.id && role(s) === 'Caption' && validSpan(s.span, itemText))
       .map(s => itemText.slice(s.span[0], s.span[1])).join('\n\n')).join(' ') : '';
   const printedShort = cutText(printed, MAX_PRINTED);
+  // Owner, 26 Nov: the printed caption itself, cut from the same page and shown under the photograph at
+  // the same print scale, with its text under Read the text. Only Caption sections with an outline.
+  const captionSections = doc.content_type === 'picture' && role(section) !== 'Caption'
+    ? itemSections.filter(s => s?.id !== section.id && role(s) === 'Caption') : [];
+  const captions = captionSections.map(s => outline(s.geometry, W, H, {strict: false})).filter(Boolean);
+  const printedParagraphs = captions.length ? readableText(captionSections.filter(s => validSpan(s.span, itemText))
+    .map(s => itemText.slice(s.span[0], s.span[1])).join('\n\n')) : [];
   const citation = doc.citation ?? {};
   const date = citation.publication_date, pageNumber = Number(citation.page_number ?? doc.page_number);
   return {
     W, H, path, preview: preview !== path && isMediaPath(preview) ? preview : '', polygon, bounds: [L, T, R, B], hits: hits.map(h => h.box),
-    bands: bands(hits, itemText), printed: printedShort,
+    bands: bands(hits, itemText), printed: printedShort, captions, printedParagraphs,
     picture: doc.content_type === 'picture',
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
@@ -156,6 +175,23 @@ export function clippingLayout(doc, clip, mediaOrigin) {
   };
 }
 
+// A section's outline on its page, clamped to the page, with its bounding box; null without one.
+// strict: an outline with no area is an error (the clipping's own section); otherwise it is skipped
+// (a printed caption), so a bad caption outline never stops the photograph showing.
+function outline(geometry, W, H, {strict = true} = {}) {
+  const ltrb = geometry?.crop_ltrb, given = geometry?.polygon;
+  let polygon = Array.isArray(given) && given.length >= 3 && given.every(point) ? given
+    : Array.isArray(ltrb) && ltrb.length === 4 && ltrb.every(Number.isFinite) ? [[ltrb[0], ltrb[1]], [ltrb[2], ltrb[1]], [ltrb[2], ltrb[3]], [ltrb[0], ltrb[3]]] : null;
+  if (!polygon) return null;
+  polygon = polygon.map(([x, y]) => [Math.min(W, Math.max(0, x)), Math.min(H, Math.max(0, y))]);
+  const L = Math.floor(Math.min(...polygon.map(p => p[0]))), T = Math.floor(Math.min(...polygon.map(p => p[1])));
+  const R = Math.ceil(Math.max(...polygon.map(p => p[0]))), B = Math.ceil(Math.max(...polygon.map(p => p[1])));
+  if (R - L < 1 || B - T < 1) {
+    if (strict) throw new Error('empty outline');
+    return null;
+  }
+  return {polygon, bounds: [L, T, R, B]};
+}
 const validSpan = (span, text) => Array.isArray(span) && Number.isInteger(span[0]) && Number.isInteger(span[1]) && span[0] >= 0 && span[1] > span[0] && span[1] <= text.length;
 // Only spaces (and at most a line end) between two highlighted words: they are one phrase. Without
 // the text, words one character apart are.
@@ -191,6 +227,12 @@ export function bands(hits, itemText) {
   });
 }
 
+// Owner, 26 Nov: a clipping is shown at its page's print scale, as if the whole page were this many CSS
+// pixels wide, so the type is about the same size in every clipping. A single newspaper column (about an
+// eighth of the page) comes out about 300px wide and reads at about its printed size; anything wider than
+// about 28% of the page (most headlines and multi-column items) fills the post's column as before.
+export const PRINT_PAGE_WIDTH = 2300;
+export const printWidth = (sectionWidth, pageWidth) => Math.max(1, Math.round(Math.min(sectionWidth, PRINT_PAGE_WIDTH * sectionWidth / pageWidth)));
 const pct = n => Number(n.toFixed(4)) + '%';
 const frac = n => Number(n.toFixed(6));
 
@@ -206,20 +248,31 @@ const frac = n => Number(n.toFixed(6));
 // once its own lazy-load trigger fires, even when the image is already in memory, and a later clipping
 // of the same page was seen to stay blank for seconds after the others had drawn. The others load
 // eagerly at low priority, so they draw as soon as the page's one download arrives.
-function scanHTML(clip, layout, alt, n, {lazy = true} = {}) {
-  const {W, H, polygon, bounds: [L, T, R, B], bands} = layout, w = R - L, h = B - T, id = 'clipping-' + n;
-  // A box the section's shape holds the whole page image, moved so the section shows; the clip path
-  // (in the image's own 0-1 units) hides everything outside the section's outline. Highlights are
-  // drawn in page pixels on an SVG laid over the box. The whole clipping opens the Article.
+// One cut-out of the page: a box the part's shape holds the whole page image, moved so the part shows;
+// the clip path (in the image's own 0-1 units) hides everything outside its outline. Highlights are
+// drawn in page pixels on an SVG laid over the box. width: the part's share of the clipping's width.
+function partHTML(layout, {polygon, bounds: [L, T, R, B]}, id, alt, width, {lazy, bands = []}) {
+  const {W, H} = layout, w = R - L, h = B - T;
   const points = polygon.map(([x, y]) => frac(x / W) + ',' + frac(y / H)).join(' ');
   const marks = bands.length ? '<svg class="blog-clipping-hits" viewBox="' + L + ' ' + T + ' ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true" focusable="false">'
     + bands.map(([x, y, bw, bh]) => '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="' + Math.round(bh * 0.2) + '"/>').join('') + '</svg>' : '';
-  return '<a class="blog-clipping-scan" href="' + escapeHTML(viewURL(clip.id)) + '" style="max-width:' + w + 'px">'
-    + '<span class="blog-clipping-part" style="aspect-ratio:' + w + '/' + h + '">'
+  return '<span class="blog-clipping-part" style="' + (width < 100 ? 'width:' + pct(width) + ';' : '') + 'aspect-ratio:' + w + '/' + h + '">'
     + '<svg class="blog-clipping-mask" width="0" height="0" aria-hidden="true" focusable="false"><clipPath id="' + id + '" clipPathUnits="objectBoundingBox"><polygon points="' + points + '"/></clipPath></svg>'
     + '<img src="' + escapeHTML(layout.preview || layout.path) + '" alt="' + escapeHTML(alt) + '" width="' + W + '" height="' + H + '"' + (lazy ? ' loading="lazy"' : ' fetchpriority="low"') + ' decoding="async"'
     + ' style="width:' + pct(100 * W / w) + ';height:' + pct(100 * H / h) + ';left:' + pct(-100 * L / w) + ';top:' + pct(-100 * T / h) + ';clip-path:url(#' + id + ')">'
-    + marks + '</span><span class="sr-only"> (opens the whole article)</span></a>';
+    + marks + '</span>';
+}
+
+// The clipping, and under a photograph its printed caption, all at the page's print scale and in one
+// link that opens the whole Article. The caption's cut-out has empty alt: its text is in Read the text.
+// It is a second <img> of the same page, so it loads eagerly at low priority (see above).
+function scanHTML(clip, layout, alt, n, {lazy = true} = {}) {
+  const parts = [{polygon: layout.polygon, bounds: layout.bounds}, ...(layout.captions ?? [])];
+  const widths = parts.map(({bounds: [L, , R]}) => printWidth(R - L, layout.W)), widest = Math.max(...widths);
+  return '<a class="blog-clipping-scan" href="' + escapeHTML(viewURL(clip.id)) + '" style="max-width:' + widest + 'px">'
+    + parts.map((part, i) => partHTML(layout, part, 'clipping-' + n + (i ? '-caption-' + i : ''), i ? '' : alt, 100 * widths[i] / widest,
+      {lazy: lazy && !i, bands: i ? [] : layout.bands})).join('')
+    + '<span class="sr-only"> (opens the whole article)</span></a>';
 }
 
 // name: the clipping's name for its links, made unique in the post (see renderClippings).
@@ -229,7 +282,11 @@ function textHTML(clip, layout, name = clip.alt) {
     const note = clip.override.kind === 'description' ? '' : '<p class="blog-clipping-note">Text checked by the author.</p>';
     return '<details class="blog-clipping-text"><summary>' + label + '</summary>' + clip.override.html + note + '</details>';
   }
-  if (!layout || layout.picture) return '';
+  if (!layout) return '';
+  // A photograph: the text of its printed caption, when the caption itself is shown under it.
+  if (layout.picture) return layout.printedParagraphs?.length ? '<details class="blog-clipping-text"><summary>Read the text</summary>'
+    + layout.printedParagraphs.map(p => '<p>' + escapeHTML(p) + '</p>').join('')
+    + '<p class="blog-clipping-note">The printed caption, read from the scan by machine, so it may contain errors.</p></details>' : '';
   let used = 0, cut = false;
   const paragraphs = [];
   for (const p of markedParagraphs(layout.text, layout.spans)) {
@@ -255,7 +312,7 @@ function captionHTML(clip, layout, name = clip.alt) {
     ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ')
     : '<a href="' + escapeHTML(viewURL(clip.id)) + '">View article<span class="sr-only">: ' + escapeHTML(name) + '</span></a>';
   return '<figcaption>' + [clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '',
-    layout?.printed ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed)
+    layout?.printed && !layout.captions?.length ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed)
       + ' <span class="blog-clipping-machine">(read by machine)</span></span>' : '',
     source ? '<span class="blog-clipping-source">' + source + '</span>' : ''].filter(Boolean).join(' ') + '</figcaption>';
 }
