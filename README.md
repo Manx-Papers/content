@@ -67,6 +67,12 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     The words are marked on the clipping like a highlighter pen: a soft yellow band behind the print,
     one band for words that follow one another on the same printed line. In "Read the text" a phrase
     is marked as one, and the words are named in the clipping's alt text.
+  - **A phrase in quote marks is found exactly** (web#212): all its words, in order, including small
+    words such as "to", "in" and "the", and nothing outside it. Words outside quote marks are still
+    found one by one, anywhere in the section, and small words outside quotes are not marked. With
+    quote marks, punctuation outside them is ignored, and so is a leading `-`: a highlight never
+    leaves words out. Quote marks must pair up; otherwise the whole highlight is searched word by
+    word.
   - **Highlights match the text as the archive read it, not the true spelling.** The archive's text
     comes from automatic reading of the scan (OCR), so a word can be misread (for example "rn"
     read for "m"). A highlight only finds the words as they were read, and whole words
@@ -75,10 +81,14 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     finds nothing in that section, or when the section isn't in the archive. A warning doesn't stop
     the post, but nothing will be highlighted, so fix or remove the highlight. If the archive can't
     be reached, the check says so: check the clipping on the preview instead.
-  - **Captions.** Under each clipping the site shows, in order: your caption, if you gave one; for
-    a photograph, the newspaper's own printed caption, labelled "Printed caption:" (added
-    automatically from the archive, nothing to do, and marked "(read by machine)"); then the
-    paper, date and page. The caption has no links: the clipping itself opens the Article.
+  - **Size.** A clipping is shown at its page's printed scale (web#213), so a narrow column stays
+    column width and a headline fills the post's width. It is centred in the post, with its caption
+    and "Read the text" under it (web#216). Nothing to set.
+  - **Captions.** A photograph shows the newspaper's own printed caption cut from the same page,
+    directly under it at the same scale, with the caption's text under "Read the text" (web#214;
+    automatic, nothing to do). If the archive has no outline for the caption, its text is shown
+    instead, labelled "Printed caption:" and marked "(read by machine)". Under each clipping the site
+    then shows your caption, if you gave one, and the paper, date and page. The caption has no links: the clipping itself opens the Article.
     - Your caption is your own note on why the clipping matters. Don't repeat the printed caption
       in it; the reader already sees that.
     - Don't also clip a photograph's caption section on its own: the photograph's clipping already
@@ -175,8 +185,9 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `8892657` (the squash merge of
-web#199: deployment settings, Control #264; the archive check now passes its API origin). Web squash-merges, so record the commit on
+until this copy is updated. The current copy is from web `main` at `f48cd57` (after web#212 quoted
+highlights, web#213 print-scale clippings, web#214 printed photo captions and web#216 centred
+clippings; only `clipping.mjs` changed since `8892657`). Web squash-merges, so record the commit on
 web `main`, not a pull request's head.
 
 ## Publishing safeguards
