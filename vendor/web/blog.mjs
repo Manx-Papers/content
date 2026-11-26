@@ -22,7 +22,7 @@ const VIEW_PATH = /^\/search\?view=(?:[A-Za-z0-9_:/-]|%2F|%3A)+$/i;
 // web#189: an Article's own page, the address Articles are linked by from now on.
 const ARTICLE_PAGE = /^\/(?:items|sections)\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/;
 // Core pages listed in the sitemap alongside visible posts.
-export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/connect-ai', '/terms', '/privacy'];
+export const SITEMAP_PAGES = ['/', '/publications', '/calendar', '/about', '/connect-ai', '/terms', '/privacy', '/accessibility'];
 
 // Tags become /blog?tag= links. A tag is words: letters, digits, hyphens, apostrophes, full stops and
 // &, separated by single spaces, starting with a letter or digit, at most 40 characters ("St. John's",

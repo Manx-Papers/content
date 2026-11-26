@@ -1,11 +1,11 @@
 {
   "source": "Manx-Papers/web",
-  "commit": "fb59a204882eec91b40a85da6606e20ca1dadd3c",
-  "source_status": "Manx-Papers/web main fb59a20, the squash merge of web#217 (Control #267: Beta switched-off signal relayed by the proxy, exactly 503 + X-Backend-State: off). Only proxy.mjs changed since f48cd57. All five files are identical to web main at that commit.",
+  "commit": "358679007ccf59d8101d20e9c3ed756bce76d178",
+  "source_status": "Manx-Papers/web main 3586790, the merge of web#218 (Control #230 on-scan continuation link; web#197 /accessibility in the sitemap). Only blog.mjs changed since fb59a20. All five files are identical to web main at that commit.",
   "drift_guard": "web test/blog-vendor.test.mjs pins the same five hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all five together when web's src/blog.mjs, clipping.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
-    "blog.mjs": "1bc0f9fff359528665b234df18d4e4da6e3773501066010f7df268b01d6a552f",
+    "blog.mjs": "e9cfbd388b7df716574216381b28d62718b881a74e21466b1c63c63d98c8654f",
     "clipping.mjs": "de51be03cc21c57764ede44944cdaefb29b7c6b94acf66aa3fcd88f7067569d3",
     "markdown.mjs": "b947a6feb8a5d1b586ae32ff5c6eede76e89934cad858f8250e3e46e6abd73f6",
     "proxy.mjs": "93f5fb45f661d4d9ddac0690a0b2105d4f3919b0773614e7c22991de7b5d7f04",
