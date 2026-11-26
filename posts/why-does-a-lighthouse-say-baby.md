@@ -30,6 +30,8 @@ If you visit the Calf of Man today, look closely at the lower of Robert Stevenso
 
 ![Operation Baby](section:IMT/IMT-1954-12-04/0001/block/R00001-B000)
 
+![The two disused lighthouses on the Calf of Man](calf-of-man-lighthouses.jpg "Two disused lighthouses, Calf of Man. Boakesey, 25 August 2006. CC BY-SA 2.0.")
+
 In [this photograph of the two lighthouses](https://commons.wikimedia.org/wiki/File:Two_disused_lighthouses%2C_Calf_of_Man_-_geograph.org.uk_-_737297.jpg), taken by Boakesey on 25 August 2006, you can just make out the faint white of the B beneath the window slot of the lower lighthouse. [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/).
 
 In November 1954, Lieutenant-Commander Frank Williams had [been warden of the Calf for less than two months](/items/IME/IME-1954-11-26/0006/record/187). His 39-year-old wife was expecting their first child when a severe storm cut the couple off from the mainland.
