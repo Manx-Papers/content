@@ -47,6 +47,13 @@ const RESPONSE_HEADERS = ['content-type', 'content-length', 'content-encoding', 
 const API_TYPES = ['application/json', 'application/ld+json', 'text/plain'];
 const MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'text/plain', 'application/json'];
 
+// Control #267 (search#258): while Beta's backend is switched off on purpose, the API and Media
+// Workers answer 503 with X-Backend-State: off, exactly (search#347). Only that signal is relayed to the browser,
+// which then shows a calm "switched off" notice instead of an error; any other failure stays an error.
+export const BACKEND_STATE = 'X-Backend-State';
+export const backendOff = response => response?.status === 503
+  && response.headers?.get?.(BACKEND_STATE) === 'off';
+
 export function isProxyPath(pathname) {
   return /^\/(?:api|iiif|media)(?:\/|$)/.test(pathname);
 }
@@ -99,13 +106,14 @@ export async function proxy(request, env, securityHeaders = defaultSecurityHeade
     // Retry-After, so the site's retry still works, but its body is never relayed.
     if (upstream.status >= 400 && upstream.status < 600) {
       const retry = upstream.headers.get('retry-after');
-      return refused(upstream.status, retry ? {'Retry-After': retry} : {});
+      return refused(upstream.status, {...(retry ? {'Retry-After': retry} : {}), ...(backendOff(upstream) ? {[BACKEND_STATE]: 'off'} : {})});
     }
     return refused(502);
   }
   const output = new Headers(securityHeaders);
   for (const name of RESPONSE_HEADERS) if (upstream.headers.has(name)) output.set(name, upstream.headers.get(name));
   output.set('Cache-Control', privateCacheControl(upstream.headers.get('cache-control')));
+  if (backendOff(upstream)) output.set(BACKEND_STATE, 'off');
   if (request.method === 'HEAD') { await upstream.body?.cancel(); return new Response(null, {status: upstream.status, headers: output}); }
   return new Response(upstream.body, {status: upstream.status, headers: output});
 }
