@@ -82,7 +82,8 @@ rules below disagree, the rules below (and `node scripts/validate.mjs`) decide w
     the post, but nothing will be highlighted, so fix or remove the highlight. If the archive can't
     be reached, the check says so: check the clipping on the preview instead.
   - **Size.** A clipping is shown at its page's printed scale (web#213), so a narrow column stays
-    column width and a headline fills the post's width. Nothing to set.
+    column width and a headline fills the post's width. It is centred in the post, with its caption
+    and "Read the text" under it (web#216). Nothing to set.
   - **Captions.** A photograph shows the newspaper's own printed caption cut from the same page,
     directly under it at the same scale, with the caption's text under "Read the text" (web#214;
     automatic, nothing to do). If the archive has no outline for the caption, its text is shown
@@ -184,9 +185,9 @@ tests with `node --test tests/*.test.mjs`.
 3. run the tests.
 
 Web's `test/blog-vendor.test.mjs` pins the same hashes, so a web change to these files fails web CI
-until this copy is updated. The current copy is from web `main` at `82218aa` (after web#212 quoted
-highlights, web#213 print-scale clippings and web#214 printed photo captions; only `clipping.mjs`
-changed since `8892657`). Web squash-merges, so record the commit on
+until this copy is updated. The current copy is from web `main` at `f48cd57` (after web#212 quoted
+highlights, web#213 print-scale clippings, web#214 printed photo captions and web#216 centred
+clippings; only `clipping.mjs` changed since `8892657`). Web squash-merges, so record the commit on
 web `main`, not a pull request's head.
 
 ## Publishing safeguards

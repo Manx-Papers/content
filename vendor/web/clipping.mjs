@@ -266,9 +266,10 @@ function partHTML(layout, {polygon, bounds: [L, T, R, B]}, id, alt, width, {lazy
 // The clipping, and under a photograph its printed caption, all at the page's print scale and in one
 // link that opens the whole Article. The caption's cut-out has empty alt: its text is in Read the text.
 // It is a second <img> of the same page, so it loads eagerly at low priority (see above).
+const clippingParts = layout => [{polygon: layout.polygon, bounds: layout.bounds}, ...(layout.captions ?? [])];
+const partWidths = layout => clippingParts(layout).map(({bounds: [L, , R]}) => printWidth(R - L, layout.W));
 function scanHTML(clip, layout, alt, n, {lazy = true} = {}) {
-  const parts = [{polygon: layout.polygon, bounds: layout.bounds}, ...(layout.captions ?? [])];
-  const widths = parts.map(({bounds: [L, , R]}) => printWidth(R - L, layout.W)), widest = Math.max(...widths);
+  const parts = clippingParts(layout), widths = partWidths(layout), widest = Math.max(...widths);
   return '<a class="blog-clipping-scan" href="' + escapeHTML(viewURL(clip.id)) + '" style="max-width:' + widest + 'px">'
     + parts.map((part, i) => partHTML(layout, part, 'clipping-' + n + (i ? '-caption-' + i : ''), i ? '' : alt, 100 * widths[i] / widest,
       {lazy: lazy && !i, bands: i ? [] : layout.bands})).join('')
@@ -329,7 +330,9 @@ export function clippingHTML(clip, layout, n, options) {
   // Clippings sharing a headline are numbered in their image link's name too (review of web#192).
   const number = name !== clip.alt && name.startsWith(clip.alt) ? name.slice(clip.alt.length) : '';
   const alt = 'Clipping: "' + clip.alt + '"' + number + (layout.hits.length ? ', highlighting “' + clip.highlight.replace(/"/g, '') + '”' : '');
-  return '<div class="blog-clipping"><figure>' + scanHTML(clip, layout, alt, n, options) + captionHTML(clip, layout, name) + '</figure>' + textHTML(clip, layout, name) + '</div>';
+  // Owner, 26 Nov: the clipping, its caption and Read the text are one column the clipping's print
+  // width (at least 18rem, see site/style.css), centred in the post.
+  return '<div class="blog-clipping" style="--clipping-width:' + Math.max(...partWidths(layout)) + 'px"><figure>' + scanHTML(clip, layout, alt, n, options) + captionHTML(clip, layout, name) + '</figure>' + textHTML(clip, layout, name) + '</div>';
 }
 
 // Replaces the renderer's <!--clipping:N--> markers. Never throws: a clipping that can't be drawn
