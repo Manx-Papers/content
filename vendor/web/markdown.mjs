@@ -85,7 +85,9 @@ export function inline(text, problems = []) {
 
 const FIGURE = /^!\[([^\]\n]*)\]\(([^)\s]+)(?:\s+"([^"\n]*)")?\)$/;
 const BLOCK_OPEN = /^:::\s*(text|description)$/;
-export function renderMarkdown(source, {slug = '', nested = false} = {}) {
+// `image` (Control #270, the draft preview) maps a post image's file name to the address it is shown
+// from; without it, the post's own folder in the content store.
+export function renderMarkdown(source, {slug = '', nested = false, image} = {}) {
   const problems = [], clippings = [];
   let block = null, lastClipping = null;
   const lines = String(source).replace(/\r\n?/g, '\n').split('\n');
@@ -95,7 +97,7 @@ export function renderMarkdown(source, {slug = '', nested = false} = {}) {
   const flushList = () => { if (list) html.push('<' + list.tag + '>' + list.items.map(i => '<li>' + inline(i, problems) + '</li>').join('') + '</' + list.tag + '>'); list = null; };
   const flushQuote = () => {
     if (!quote.length) return;
-    const inner = renderMarkdown(quote.join('\n'), {slug, nested: true});
+    const inner = renderMarkdown(quote.join('\n'), {slug, nested: true, image});
     problems.push(...inner.problems);
     html.push('<blockquote>' + inner.html + '</blockquote>');
     quote = [];
@@ -150,7 +152,7 @@ export function renderMarkdown(source, {slug = '', nested = false} = {}) {
         ? 'archive page images are not allowed in posts: show a section as a clipping with ![headline](section:<section ID>): ' + m[2]
         : 'image not allowed: ' + m[2]);
       else if (!m[1].trim()) problems.push('image needs alt text: ' + m[2]);
-      else html.push('<figure><img src="' + escapeHTML(src) + '" alt="' + escapeHTML(m[1].trim()) + '" loading="lazy" decoding="async">'
+      else html.push('<figure><img src="' + escapeHTML(image ? image(src.slice(src.lastIndexOf('/') + 1)) : src) + '" alt="' + escapeHTML(m[1].trim()) + '" loading="lazy" decoding="async">'
         + (m[3] ? '<figcaption>' + inline(m[3], problems) + '</figcaption>' : '') + '</figure>');
     } else if ((m = /^\s*(?:([-*])|(\d{1,3})[.)])\s+(.*)$/.exec(line))) {
       flushParagraph();
