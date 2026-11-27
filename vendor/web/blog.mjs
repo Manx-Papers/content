@@ -11,6 +11,7 @@ export const PREFIX = 'blog/';
 // The page shell built by scripts/prepare.mjs; the Worker fills it and never serves it as-is.
 export const BLOG_SHELL = '/assets/blog-page.html';
 export const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const RESERVED_SLUGS = new Set(['preview']);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_ZONE = 'Europe/Isle_of_Man';
 // Owner, 24 Nov: the owner reads posts but does not verify them, so the line claims no editorial check.
@@ -58,6 +59,8 @@ export function postMeta(raw, {body = false} = {}) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail('not an object');
   for (const key of Object.keys(raw)) if (!KEYS.has(key)) fail('unknown field ' + key);
   if (typeof raw.slug !== 'string' || raw.slug.length > 80 || !SLUG.test(raw.slug)) fail('slug');
+  // Control #270: /blog/preview is the draft preview, so no post may take that address.
+  if (RESERVED_SLUGS.has(raw.slug)) fail('slug ' + raw.slug + ' is reserved');
   if (!text(raw.title, 120)) fail('title');
   if (!realDate(raw.date)) fail('date');
   if (!text(raw.summary, 300)) fail('summary');
@@ -176,17 +179,21 @@ export function renderIndex(posts, origin, tag) {
 
 // web#183: archive clippings are read through env.API while the page is built; one that can't be
 // read becomes a placeholder figure, never an error page. A HEAD request reads nothing.
-export async function renderPost(post, origin, day, env, {head = false} = {}) {
-  const rendered = renderMarkdown(post.body, {slug: post.slug});
+// Control #270: the draft preview renders through this same function. `image` maps a post image's
+// file name to its address (by default the content store's), `banner` is markup put above the post,
+// and `noindex` marks the page noindex whatever its date.
+export const postImage = slug => file => '/blog/images/' + slug + '/' + file;
+export async function renderPost(post, origin, day, env, {head = false, image = postImage(post.slug), banner = '', noindex = false} = {}) {
+  const rendered = renderMarkdown(post.body, {slug: post.slug, image});
   const html = await renderClippings(rendered.html, rendered.clippings, env, {read: !head});
   const scheduled = post.date > day;
-  const image = post.image ? origin + '/blog/images/' + post.slug + '/' + post.image : origin + DEFAULT_IMAGE;
+  const shareImage = post.image ? origin + image(post.image) : origin + DEFAULT_IMAGE;
   const sources = post.sources.map(s => '<li><a href="' + escapeHTML(s.url) + '">' + escapeHTML(s.label) + '</a></li>').join('');
   return {
     title: escapeHTML(post.title),
-    head: headTags({title: post.title, description: post.summary, url: origin + '/blog/' + post.slug, image,
-      imageAlt: post.image ? post.image_alt : DEFAULT_IMAGE_ALT, type: 'article', published: post.date, updated: post.updated, noindex: scheduled}),
-    content: '<div class="blog-post-nav">\n<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">' + BLOG_LINK + '</a></nav>\n'
+    head: headTags({title: post.title, description: post.summary, url: origin + '/blog/' + post.slug, image: shareImage,
+      imageAlt: post.image ? post.image_alt : DEFAULT_IMAGE_ALT, type: 'article', published: post.date, updated: post.updated, noindex: noindex || scheduled}),
+    content: banner + '<div class="blog-post-nav">\n<nav class="blog-breadcrumb" aria-label="Breadcrumb"><a href="/blog">' + BLOG_LINK + '</a></nav>\n'
       + tagList(post.tags) + '</div>\n<article class="blog-post" aria-labelledby="post-title">\n<div class="blog-post-head">\n'
       + '<h1 id="post-title">' + escapeHTML(post.title) + '</h1>\n'
       + '<p class="blog-byline">By ' + escapeHTML(post.author) + ' · ' + timeTag(post.date)
@@ -223,9 +230,13 @@ const IMAGE_TYPES = {jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', we
 // Returns a Response for a blog URL, or null when the path is not the blog's.
 // `respond(body, init)` adds the site's security headers; `page({title, head, content})` fills the
 // shell with markup that is already escaped (title included).
-export async function handleBlog(request, env, {respond, page, now = new Date()}) {
+// Control #270: `preview`, when given, answers the draft preview's paths (preview.mjs), and only when
+// the content store is bound: without it the blog is off and so is the preview.
+export async function handleBlog(request, env, {respond, page, now = new Date(), preview}) {
   const url = new URL(request.url), path = url.pathname, store = env?.BLOG;
   if (!isBlogPath(path)) return null;
+  if (preview && (path === '/blog/preview' || path === '/blog/preview/image'))
+    return store && typeof store.get === 'function' ? preview() : respond('Not found', {status: 404, headers: {'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow', 'Content-Type': 'text/plain; charset=utf-8'}});
   // The one query allowed is a single ?tag= on /blog, in the tag charset.
   const params = [...url.searchParams];
   const tag = path === '/blog' && params.length === 1 && params[0][0] === 'tag' ? params[0][1].trim().replace(/ +/g, ' ') : null;
