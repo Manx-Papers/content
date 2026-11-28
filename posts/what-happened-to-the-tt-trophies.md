@@ -22,7 +22,7 @@ sources:
 
 > **A story rediscovered**
 >
-> I had dipped into the Manx National Heritage newspaper archive many times over the years, particularly after it became free in 2020. But this one story is what really opened my eyes to the value in that resource - without it, could this tale have still been told?
+> I had dipped into the Manx National Heritage newspaper archive many times over the years, particularly after it became free in 2020. But it was my frustration in 2023, when I couldn't find this story mentioned online or in the books where I expected to find it, that really opened my eyes to the value of the archive. Without it, would this tale still have been told?
 
 The story of how Nazi Germany turned the 1939 Isle of Man TT into a propaganda victory is fairly well known, largely thanks to Roger Willis' excellent book, [*The Nazi TT*](https://shop.iomtt.com/prdMT5700/The-Nazi-TT-PB).
 
