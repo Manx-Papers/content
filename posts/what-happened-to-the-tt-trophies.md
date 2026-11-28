@@ -3,6 +3,8 @@ title: "What happened to the TT trophies during the Second World War?"
 date: 2026-11-20
 summary: "In 1939 two Isle of Man TT trophies went to Germany and Italy. War broke out weeks later. Their return would involve a hen house, the Russian Zone and an unlikely team of rescuers."
 tags: [TT, Second World War, motorcycles, Manx Museum, 1939, 1940s]
+image: senior-tt-trophy-manx-museum.jpg
+image_alt: "The historic TT trophies displayed at the Manx Museum in Douglas"
 sources:
   - url: /items/IME/IME-1940-04-19/0006/record/124
     label: "Isle of Man Examiner, 19 April 1940: Senior Tourist Trophy in Germany"
@@ -42,7 +44,12 @@ This is the story of how they came home.
 
 ## Mercury and the marquis
 
+![The Senior TT trophy displayed in the Manx Museum](senior-tt-trophy-manx-museum.jpg "The historic TT trophies, displayed at the Manx Museum in Douglas. Photograph supplied by the author.")
+
+
 The Senior prize is known by the wonderfully grand name **Marquis de Mouzilly St Mars Trophy**, after the man who presented it. A [1934 TT publication refers to the original 1907 award](/items/TTS/TTS-1934-05-31/0021/record/169). The silver Mercury, inspired by Giambologna's statue of the Roman messenger god, stands atop a winged wheel, while shields on the plinth record generations of Senior TT winners.
+
+![Giambologna’s Mercury in Florence](giambologna-mercury-florence.jpg "Giambologna’s Mercury in Florence, the sculpture which inspired the figure on the Senior TT trophy. Photograph supplied by the author.")
 
 A separate trophy was added for the Junior in 1910, and another for the Lightweight in 1922. Unlike today, when winners mostly get a quick podium moment, the trophies used to travel home with the winning teams.
 
@@ -52,7 +59,15 @@ That mattered rather a lot in 1939.
 
 On Wednesday 14 June 1939, the Lightweight was won by **Ted Mellors**, an Englishman riding for the Italian manufacturer Benelli. The Lightweight Trophy therefore went to Pesaro in Italy.
 
+![Ted Mellors on Benelli number one at the 1939 TT](ted-mellors-benelli-1939.jpg "Ted Mellors with Benelli number 1 at the 1939 TT. Historical photograph from the Manx National Heritage iMuseum collections.")
+
+[See the Ted Mellors record in iMuseum](https://imuseum.im/search/collections/people/mnh-agent-1276954.html).
+
 Two days later, BMW rider **Georg 'Schorsch' Meier** won the Senior. His British teammate **Jock West** finished second. The Senior Trophy went to Munich.
+
+![Georg Meier and Jock West after the 1939 Senior TT](georg-meier-jock-west-1939-senior.png "Georg Meier (winner) and Jock West (runner-up) after the 1939 Senior TT. Manx National Heritage, iMuseum collection.")
+
+[View the original Meier and West photograph](https://imuseum.im/search/collections/archive/mnh-museum-114531.html).
 
 The German victory was celebrated with a synchronised Nazi salute in the winners' enclosure, and the 1939 TT soon became one of the best-known propaganda episodes in the race's history.
 
@@ -61,6 +76,14 @@ The German victory was celebrated with a synchronised Nazi salute in the winners
 On 1 September 1939, Nazi Germany invaded Poland. Britain and France declared war two days later — a mere 79 days after the Senior TT. Italy joined the war on Germany's side in June 1940.
 
 Across Europe, factories that had built racing and touring motorcycles turned to the war effort. The Benelli and BMW works were no longer simply associated with sporting success; they were now caught up in a continent at war, vulnerable to damage, occupation and bombing.
+
+![Benelli’s pre-war motorcycle factory in Pesaro](benelli-factory-pesaro.jpg "Benelli’s motorcycle works at Pesaro before the war. Image reproduced from material provided for the article; historical context: Benelli.")
+
+[Benelli’s company history](https://www.benelli.com/int-en/about-us) records the factory’s history.
+
+![BMW’s Milbertshofen works in 1945](bmw-plant-milbertshofen-1945.jpg "BMW’s Milbertshofen plant in 1945, after wartime destruction. Photograph: BMW Group archive.")
+
+[Original BMW Group photograph](https://www.press.bmwgroup.com/global/photo/detail/P90094359/bmw-plant-milbertshofen-1945-12/2012).
 
 And with the trophies now in enemy territory, the obvious question was: what had happened to them?
 
@@ -88,6 +111,10 @@ The search for them fell to a ragtag bunch of former motorcycle riders turned se
 
 The hunt for the Lightweight Trophy led to **Major Arthur Simcock**, an Australian former TT competitor serving with the Royal Army Service Corps.
 
+![Major Arthur Simcock, former TT rider](arthur-simcock.jpg "Arthur Simcock, former TT competitor and one of the men involved in recovering the Lightweight Trophy. See his Manx National Heritage iMuseum record.")
+
+[Arthur Simcock in iMuseum](https://imuseum.im/search/collections/people/mnh-agent-1274052.html).
+
 By the time he reached Benelli, the factory had been through the war and Giovanni Benelli had been taken to Germany as a forced labourer.
 
 But before he was taken away, Benelli had hidden the trophy.
@@ -99,6 +126,8 @@ The *Isle of Man Examiner* reported its recovery in July 1945.
 ![Buried by winning machine maker](section:IME/IME-1945-07-20/0001/block/R00007-B001?highlight="hen-coop+over+it+to+mark+the+spot" "The key detail: a chicken coop placed over the hiding place.")
 
 The paper explained that Benelli had buried the trophy in a garden near his factory and placed a hen coop over it **to mark the spot**. Simcock was told where to look, and with a group of British officers entered the coop and recovered the trophy.
+
+![Illustration of the hidden Lightweight TT trophy beneath a chicken coop](under-the-coup.png "The Lightweight Trophy’s remarkable hiding place, recreated in an illustration made for this story.")
 
 One of the Isle of Man TT's great trophies had survived the Second World War beneath a rural Italian chicken coop.
 
@@ -112,6 +141,8 @@ The first breakthrough seems to have come from **Jock West**, runner-up to Meier
 
 But Vienna was in Russian-occupied territory.
 
+![Joe Craig, former TT rider and Norton team manager](joe-craig.jpg "Joe Craig, who helped trace the missing Senior Trophy. Historical portrait supplied for this article.")
+
 The story then passes to **Joe Craig**, the famous Norton man and former TT rider. In December 1945 the *Examiner* reported that Craig had discovered the exact locality of the trophy's hiding place — but it was **in the Russian Zone**.
 
 ![The Senior T.T. Trophy traced!](section:IME/IME-1945-12-07/0004/block/R00206-B000 "The Senior Trophy was finally being narrowed down.")
@@ -120,6 +151,8 @@ The story then passes to **Joe Craig**, the famous Norton man and former TT ride
 ::: text
 The report says Joe Craig had traced the Senior TT Trophy to its hiding place in the Russian Zone and could not himself follow up the clues. British Army of the Rhine headquarters had taken up the matter.
 :::
+
+[More about Joe Craig’s racing career](https://thevintagent.com/2023/06/08/joe-craig-making-norton-famous/).
 
 That same report also noted that *Motor Cycling* jokingly suggested the Russians should be invited to compete for the trophy in exchange for returning it.
 
