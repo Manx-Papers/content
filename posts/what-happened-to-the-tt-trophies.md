@@ -1,7 +1,7 @@
 ---
 title: "What happened to the TT trophies during the Second World War?"
 date: 2026-11-20
-summary: "In 1939 two Isle of Man TT trophies went to Germany and Italy. War broke out weeks later. Their return would involve a hen house, the Soviet occupation zone and an unlikely team of rescuers."
+summary: "In 1939 two Isle of Man TT trophies went to Germany and Italy. War broke out weeks later. Their return would involve a hen house, the Russian Zone and an unlikely team of rescuers."
 tags: [TT, Second World War, motorcycles, Manx Museum, 1939, 1940s]
 sources:
   - url: /items/IME/IME-1940-04-19/0006/record/124
@@ -22,98 +22,135 @@ sources:
 
 > **A story rediscovered**
 >
-> I first heard the story of the TT trophies' wartime adventures many years ago, but when I tried to find it again, I drew a blank. I couldn't find the original account, and the books I expected to mention it didn't tell the story as I remembered it. Roger Willis's excellent [*The Nazi TT*](https://shop.iomtt.com/prdMT5700/The-Nazi-TT-PB) tells the much better-known story of Germany's propaganda victory at the 1939 races — but what happened to the trophies afterwards?
->
-> So I went back to the original newspapers, using the free digitised collections made available by **Manx National Heritage**, and pieced together what happened. Without that archive, this extraordinary little story — and much of its detail — might have remained forgotten. What other stories are still waiting to be rediscovered?
->
-> Manx National Heritage is a charity. If you value access to our history, please consider [supporting its work with a donation](https://donate.manxnationalheritage.im/).
+> I had dipped into the Manx National Heritage newspaper archive many times over the years, particularly after it became free in 2020. But this one story is what really opened my eyes to the value in that resource - without it, could this tale have still been told?
 
-In June 1939, two of the Isle of Man TT's prestigious trophies left the Island in the hands of the winning manufacturers. One went to Germany, the other to Italy. Just 79 days after the Senior race, Britain was at war with Germany.
+The story of how Nazi Germany turned the 1939 Isle of Man TT into a propaganda victory is fairly well known, largely thanks to Roger Willis' excellent book, [*The Nazi TT*](https://shop.iomtt.com/prdMT5700/The-Nazi-TT-PB).
+
+But the story of what happened to the trophies after they left the Island, and how they returned to be awarded when racing resumed in 1947, is far less well known.
+
+Many sources — including Roger Willis' book — state that the trophies never left the Island. But I had read otherwise, somewhere. My attempts to find that original source were fruitless, so using the excellent free collections from **Manx National Heritage**, I pieced the story back together.
+
+In June 1939, two of the Isle of Man TT's most prestigious trophies left the Island in the hands of the winning manufacturers.
+
+One went to Nazi Germany.
+
+The other went to Mussolini's Italy.
+
+Just 79 days after the Senior race, Britain was at war with Germany.
 
 This is the story of how they came home.
-
 
 ## Mercury and the marquis
 
 The Senior prize is known by the wonderfully grand name **Marquis de Mouzilly St Mars Trophy**, after the man who presented it. A [1934 TT publication refers to the original 1907 award](/items/TTS/TTS-1934-05-31/0021/record/169). The silver Mercury, inspired by Giambologna's statue of the Roman messenger god, stands atop a winged wheel, while shields on the plinth record generations of Senior TT winners.
 
-A separate Lightweight Trophy was introduced in 1922. Unlike today's brief podium appearances, the winning teams once took the trophies away. In 1939, that custom had extraordinary consequences.
+A separate trophy was added for the Junior in 1910, and another for the Lightweight in 1922. Unlike today, when winners mostly get a quick podium moment, the trophies used to travel home with the winning teams.
 
-## The last TT before the war
+That mattered rather a lot in 1939.
 
-On 14 June 1939, the Lightweight was won by English rider **Ted Mellors**, competing on an Italian Benelli. The trophy travelled to Benelli's home in Pesaro, Italy. Two days later, BMW's **Georg 'Schorsch' Meier** won the Senior. His British teammate **Jock West** came second. The Senior trophy left for BMW in Munich.
+## The 1939 TT
 
+On Wednesday 14 June 1939, the Lightweight was won by **Ted Mellors**, an Englishman riding for the Italian manufacturer Benelli. The Lightweight Trophy therefore went to Pesaro in Italy.
 
-The Nazi team exploited its TT success for propaganda, including a collective Nazi salute in the winners' enclosure. As the two trophies travelled to their winning manufacturers, Europe was on the brink of war.
+Two days later, BMW rider **Georg 'Schorsch' Meier** won the Senior. His British teammate **Jock West** finished second. The Senior Trophy went to Munich.
 
-## From racing factories to the war effort
+The German victory was celebrated with a synchronised Nazi salute in the winners' enclosure, and the 1939 TT soon became one of the best-known propaganda episodes in the race's history.
 
-On **1 September 1939**, Nazi Germany invaded Poland. Britain and France declared war two days later — just **79 days after the Senior TT**. Italy initially remained out of the fighting, then entered the war on Germany's side in June 1940.
+## From racing to war
 
-The factories that had built the winning motorcycles were no longer simply turning out racing and touring machines. Motorcycle production was drawn into the war effort, including military transport, and **BMW and Benelli's factories were hit or threatened by Allied bombing**. Benelli's premises in Pesaro also suffered wartime seizure and destruction.
+On 1 September 1939, Nazi Germany invaded Poland. Britain and France declared war two days later — a mere 79 days after the Senior TT. Italy joined the war on Germany's side in June 1940.
 
-The Lightweight Trophy was in Italy. The Senior Trophy had been taken to Germany. With factories at risk, occupied territory changing hands and no TT racing during the war, there was every reason to wonder whether either would ever be seen again.
+Across Europe, factories that had built racing and touring motorcycles turned to the war effort. The Benelli and BMW works were no longer simply associated with sporting success; they were now caught up in a continent at war, vulnerable to damage, occupation and bombing.
 
-As early as April 1940, [the *Isle of Man Examiner* wondered whether the Senior Trophy would ever return](/items/IME/IME-1940-04-19/0006/record/124).
+And with the trophies now in enemy territory, the obvious question was: what had happened to them?
 
-![Manx rescue party?](section:IME/IME-1940-04-19/0006/block/R00124-B002?highlight="Any+Offers+For+Manx" "Already in April 1940, the Manx press was joking about a rescue party.")
+As early as April 1940, [the *Isle of Man Examiner* was already wondering whether the Senior Trophy would ever come back](/items/IME/IME-1940-04-19/0006/record/124).
 
-The paper had written to Auto-Cycle Union secretary **Sam Huggett**, who said they hoped the trophy was safe, but would not object to Manx volunteers recovering it. The columnist joked that it ought to be rescued before it was melted down into medals for Hermann Göring.
+![Manx rescue party?](section:IME/IME-1940-04-19/0006/block/R00124-B000 "The Examiner worried about the Senior Trophy's fate in April 1940.")
 
-Five years later, a rescue party of sorts did emerge.
+![Any offers for a rescue party?](section:IME/IME-1940-04-19/0006/block/R00124-B002?highlight="Any+Offers+For+Manx+Rescue+Party" "A lovely early hint of the adventure to come.")
+
+The paper had written to Auto-Cycle Union secretary **Sam Huggett**, who replied that the ACU hoped the trophy was in safe custody, though it would much rather have kept it on the Island. He added that they would not object to a band of Manx volunteers effecting a recovery.
+
+Five years later, a rescue party of sorts did indeed emerge.
 
 ## The ragtag recovery team
 
-After VE Day in May 1945, riders began thinking about a return to racing. But had the trophies survived? Their recovery came down to a ragtag collection of former TT competitors turned servicemen, and the military officers who could help them. It has something of *The Monuments Men* about it — except that the missing treasures were motorcycle trophies.
+When the war in Europe ended in May 1945, thoughts quickly turned to racing again.
 
-## The Lightweight Trophy: under a hen house
+But where were the trophies?
 
-**Major Arthur Simcock**, an Australian former TT competitor serving with the Royal Army Service Corps, was in Italy. The Benelli premises had suffered during the war, and Giovanni Benelli had been sent to Germany as forced labour. Before his deportation, however, he had hidden the Lightweight Trophy in a nearby garden.
+Had they survived?
 
-![The Lightweight TT trophy found](section:IME/IME-1945-07-20/0001/block/R00007-B000 "The Isle of Man Examiner announced the discovery on 20 July 1945.")
+The search for them fell to a ragtag bunch of former motorcycle riders turned servicemen, together with the officers who had the authority to follow the clues.
 
-And to **mark the spot**, he had put a chicken coop directly over it. As the [contemporary report explains](/items/IME/IME-1945-07-20/0001/record/7), Simcock was told where to look. With a group of British officers, he entered the coop and recovered the trophy.
+## The Lightweight Trophy: beneath a hen house
 
+The hunt for the Lightweight Trophy led to **Major Arthur Simcock**, an Australian former TT competitor serving with the Royal Army Service Corps.
 
-![The hen-house explanation](section:IME/IME-1945-07-20/0001/block/R00007-B001?highlight="to+mark+the+spot" "The paper explicitly says the coop marked the spot; it does not say it disguised disturbed earth.")
+By the time he reached Benelli, the factory had been through the war and Giovanni Benelli had been taken to Germany as a forced labourer.
 
-One trophy had survived six years of war beneath an Italian hen house. The hunt for the other led into Soviet-controlled Vienna.
+But before he was taken away, Benelli had hidden the trophy.
 
-## The Senior Trophy: the Russian Zone
+The *Isle of Man Examiner* reported its recovery in July 1945.
 
-**Jock West**, runner-up to Meier in 1939 and himself a former BMW rider, was reportedly the first to trace the Senior Trophy to Vienna, where it had been sent for safekeeping.
+![Lightweight T.T. Trophy found](section:IME/IME-1945-07-20/0001/block/R00007-B000 "The discovery of the Lightweight Trophy made the front page of the Examiner.")
 
-![Senior Trophy traced to Vienna](section:IME/IME-1945-10-05/0004/block/R00182-B001 "By October 1945, the search had shifted from Munich to Vienna.")
+![Buried by winning machine maker](section:IME/IME-1945-07-20/0001/block/R00007-B001?highlight="hen-coop+over+it+to+mark+the+spot" "The key detail: a chicken coop placed over the hiding place.")
 
-The [October report](/items/IME/IME-1945-10-05/0004/record/182) said the trail led into Russian-occupied territory. **Joe Craig**, who had ridden Nortons in the 1920s, carried on the search and believed he had pinpointed the trophy's location. But he could not follow up his clues in the Russian Zone, so the matter went to the British Army of the Rhine.
+The paper explained that Benelli had buried the trophy in a garden near his factory and placed a hen coop over it **to mark the spot**. Simcock was told where to look, and with a group of British officers entered the coop and recovered the trophy.
 
-![Safe in Russian custody?](section:IME/IME-1945-12-07/0004/block/R00206-B001?highlight="Rugsian+Zone" "The OCR reads 'Rugsian', but the printed report refers to the Russian Zone.")
+One of the Isle of Man TT's great trophies had survived the Second World War beneath a rural Italian chicken coop.
+
+## The Senior Trophy: Vienna and the Russian Zone
+
+The Senior Trophy proved harder to recover.
+
+The first breakthrough seems to have come from **Jock West**, runner-up to Meier in the 1939 Senior and himself a former BMW rider. By October 1945, the *Isle of Man Examiner* reported that the trophy had been traced to Vienna, where the Germans had apparently sent it for safe keeping.
+
+![Senior T.T. Trophy traced to Vienna](section:IME/IME-1945-10-05/0004/block/R00182-B001?highlight="traced+it+to+Vienna" "By October 1945, the trail had reached Vienna.")
+
+But Vienna was in Russian-occupied territory.
+
+The story then passes to **Joe Craig**, the famous Norton man and former TT rider. In December 1945 the *Examiner* reported that Craig had discovered the exact locality of the trophy's hiding place — but it was **in the Russian Zone**.
+
+![The Senior T.T. Trophy traced!](section:IME/IME-1945-12-07/0004/block/R00206-B000 "The Senior Trophy was finally being narrowed down.")
+
+![Safe? in Russian custody](section:IME/IME-1945-12-07/0004/block/R00206-B001?highlight="Russian+Custody" "The paper wasn't entirely reassured by the phrase 'safe custody'.")
 ::: text
 The report says Joe Craig had traced the Senior TT Trophy to its hiding place in the Russian Zone and could not himself follow up the clues. British Army of the Rhine headquarters had taken up the matter.
 :::
 
-The report even relayed *Motor Cycling* magazine's joke that the Russians should be invited to compete for the prize in exchange for its return.
+That same report also noted that *Motor Cycling* jokingly suggested the Russians should be invited to compete for the trophy in exchange for returning it.
 
 ## A little gentle persuasion
 
-The final search fell to **Lieutenant Colonel H. Blake**, a British Control Commission officer based near Frankfurt. In January 1946 he travelled to Vienna and visited the BMW agents. A former secretary had remembered seeing the trophy there in the previous year.
+The final act belonged to **Lieutenant Colonel H. Blake** of the Control Commission for Germany.
 
-At first, the manager denied having it. Then he said it had been stolen by one of the Allies. Finally, as Blake wrote to the ACU, the trophy was produced after **'a little gentle persuasion'**.
+In January 1946, Blake travelled to Vienna and followed the trail to the BMW agents. A former secretary remembered seeing the trophy there in the previous year.
 
-![Senior Tourist Trophy found](section:RYC/RYC-1946-01-25/0008/block/R00074-B000 "The Ramsey Courier announced that the Senior Trophy was back in British hands.")
+At first, the manager denied having it.
 
-![The BMW manager changes his story](section:RYC/RYC-1946-01-25/0008/block/R00074-B002?highlight="a+little+gentle+persuasion" "Blake's own account of the encounter, and the damage sustained by the trophy.")
+Then he said it had been stolen by one of the Allies.
 
-It was not unscathed. Mercury's staff needed soldering, the plinth was scratched, some shields were bent, and one winner's shield was missing.
+Eventually, as Blake wrote in his account, it was produced after **"a little gentle persuasion"**.
 
-But the **Marquis de Mouzilly St Mars Trophy** was coming home. Blake had it safely in his office at Höchst and expected to bring it to England in February 1946.
+![Senior Tourist Trophy found](section:RYC/RYC-1946-01-25/0008/block/R00074-B000 "The Ramsey Courier announced that the Senior Trophy had been found.")
 
-## What happened to the trophies?
+![A little gentle persuasion](section:RYC/RYC-1946-01-25/0008/block/R00074-B002?highlight="a+little+gentle+persuasion" "Blake's own description of how the trophy reappeared.")
 
-The TT returned in 1947, and the recovered trophies returned to racing life. Today they can usually be seen in the **Manx Museum in Douglas**, and sometimes make their appearance on the TT podium.
+The trophy was back in British hands, though not entirely unscathed. Mercury's staff needed soldering, the plinth was scratched, some shields were bent, and one winner's shield was missing.
 
-So next time you see them, remember that, between them, they survived bombing raids, post-war chaos, the Iron Curtain, and years buried beneath a rural Italian hen house.
+But the **Marquis de Mouzilly St Mars Trophy** was coming home.
+
+## Home again
+
+TT racing resumed in 1947, and the recovered trophies returned to racing life.
+
+Today they can usually be seen in the **Manx Museum in Douglas**, though they still emerge for TT presentations too.
+
+So next time you see them — in the museum or on the podium — remember that, between them, they survived war, post-war confusion, the Russian Zone, and years buried beneath a rural Italian hen house.
 
 ---
 
-*Written with AI assistance. Based on the author's original research, 2023 thread, video scripts and contemporary Manx newspaper reports.*
+*Written with AI assistance. Based on the author's original research, video scripts and contemporary Manx newspaper reports.*
