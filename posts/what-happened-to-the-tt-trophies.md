@@ -26,25 +26,23 @@ sources:
     label: "TT Special, 31 May 1934: C. R. Collier and the Marquis de Mouzilly St Mars Trophy"
 ---
 
-> **A story rediscovered**
->
 > It was my frustration in 2023, when I couldn't find this story mentioned online or in the books where I expected to find it, that really opened my eyes to the value of Manx National Heritage's newspaper archive. Without it, would this tale have been forgotten?
 
 The story of how Nazi Germany turned the 1939 Isle of Man TT into a propaganda victory is fairly well known, largely thanks to Roger Willis' excellent book, [*The Nazi TT*](https://shop.iomtt.com/prdMT5700/The-Nazi-TT-PB).
 
 But the story of what happened to the trophies after they left the Island, and how they returned to be awarded when racing resumed in 1947, is far less well known.
 
-Many sources — including Roger Willis' book — state that the trophies never left the Island. But I had read otherwise, somewhere. My attempts to find that original source were fruitless, so using the excellent free collections from **Manx National Heritage**, I pieced the story back together.
+Many sources — including Roger Willis' book — state that the trophies never left the Island. But I had read otherwise, somewhere. My attempts to find that original source were fruitless, so using the excellent free collections from Manx National Heritage, I pieced the story back together.
 
 In June 1939, two of the Isle of Man TT's most prestigious trophies left the Island in the hands of the winning manufacturers.
 
-One went to Nazi Germany.
+One went to Nazi **Germany**.
 
-The other went to Mussolini's Italy.
+The other went to Mussolini's **Italy**.
 
 Just 79 days after the Senior race, Britain was at war with Germany.
 
-This is the story of how they came home.
+*This is the story of how they came home.*
 
 ## Mercury and the marquis
 
