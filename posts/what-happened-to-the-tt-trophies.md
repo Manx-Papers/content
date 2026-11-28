@@ -20,6 +20,14 @@ sources:
     label: "TT Special, 31 May 1934: C. R. Collier and the Marquis de Mouzilly St Mars Trophy"
 ---
 
+> **A story rediscovered**
+>
+> I first heard the story of the TT trophies' wartime adventures many years ago, but when I tried to find it again, I drew a blank. I couldn't find the original account, and the books I expected to mention it didn't tell the story as I remembered it. Roger Willis's excellent [*The Nazi TT*](https://shop.iomtt.com/prdMT5700/The-Nazi-TT-PB) tells the much better-known story of Germany's propaganda victory at the 1939 races — but what happened to the trophies afterwards?
+>
+> So I went back to the original newspapers, using the free digitised collections made available by **Manx National Heritage**, and pieced together what happened. Without that archive, this extraordinary little story — and much of its detail — might have remained forgotten. What other stories are still waiting to be rediscovered?
+>
+> Manx National Heritage is a charity. If you value access to our history, please consider [supporting its work with a donation](https://donate.manxnationalheritage.im/).
+
 In June 1939, two of the Isle of Man TT's prestigious trophies left the Island in the hands of the winning manufacturers. One went to Germany, the other to Italy. Just 79 days after the Senior race, Britain was at war with Germany.
 
 This is the story of how they came home.
@@ -96,7 +104,7 @@ At first, the manager denied having it. Then he said it had been stolen by one o
 
 ![The BMW manager changes his story](section:RYC/RYC-1946-01-25/0008/block/R00074-B002?highlight="a+little+gentle+persuasion" "Blake's own account of the encounter, and the damage sustained by the trophy.")
 
-It was not unscathed. Mercury's staff needed soldering, the plinth was scratched, some shields were bent, and one winner's shield was missing. 
+It was not unscathed. Mercury's staff needed soldering, the plinth was scratched, some shields were bent, and one winner's shield was missing.
 
 But the **Marquis de Mouzilly St Mars Trophy** was coming home. Blake had it safely in his office at Höchst and expected to bring it to England in February 1946.
 
