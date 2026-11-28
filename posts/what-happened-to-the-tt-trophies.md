@@ -6,6 +6,10 @@ tags: [TT, Second World War, motorcycles, Manx Museum, 1939, 1940s]
 image: senior-tt-trophy-manx-museum.jpg
 image_alt: "The historic TT trophies displayed at the Manx Museum in Douglas"
 sources:
+  - url: /items/IMT/IMT-1938-06-11/0011/record/50
+    label: "Isle of Man Times, 11 June 1938: The Tourist Trophy"
+  - url: /items/IMT/IMT-1938-06-11/0011/record/294
+    label: "Isle of Man Times, 11 June 1938: photograph of the Tourist Trophy"
   - url: /items/IME/IME-1940-04-19/0006/record/124
     label: "Isle of Man Examiner, 19 April 1940: Senior Tourist Trophy in Germany"
   - url: /items/IME/IME-1945-07-20/0001/record/7
@@ -44,8 +48,10 @@ This is the story of how they came home.
 
 ## Mercury and the marquis
 
-![The Senior TT trophy displayed in the Manx Museum](senior-tt-trophy-manx-museum.jpg "The historic TT trophies, displayed at the Manx Museum in Douglas. Photograph supplied by the author.")
 
+![The Tourist Trophy, pictured in 1938](section:IMT/IMT-1938-06-11/0011/block/R00294-B000 "The Senior Tourist Trophy, reproduced in the Isle of Man Times of 11 June 1938, page 11.")
+
+![The Tourist Trophy explained](section:IMT/IMT-1938-06-11/0011/block/R00050-B002?highlight="Marquis+de+Mouzilly+St.+Mars" "The contemporary account explains its origins, the replicas and the winners' shields.")
 
 The Senior prize is known by the wonderfully grand name **Marquis de Mouzilly St Mars Trophy**, after the man who presented it. A [1934 TT publication refers to the original 1907 award](/items/TTS/TTS-1934-05-31/0021/record/169). The silver Mercury, inspired by Giambologna's statue of the Roman messenger god, stands atop a winged wheel, while shields on the plinth record generations of Senior TT winners.
 
@@ -183,6 +189,8 @@ TT racing resumed in 1947, and the recovered trophies returned to racing life.
 Today they can usually be seen in the **Manx Museum in Douglas**, though they still emerge for TT presentations too.
 
 So next time you see them — in the museum or on the podium — remember that, between them, they survived war, post-war confusion, the Russian Zone, and years buried beneath a rural Italian hen house.
+
+![The Senior TT trophy displayed in the Manx Museum](senior-tt-trophy-manx-museum.jpg "The historic TT trophies, displayed at the Manx Museum in Douglas. Photograph supplied by the author.")
 
 ---
 
