@@ -171,8 +171,23 @@ export function clippingLayout(doc, clip, mediaOrigin) {
     paper: typeof citation.title === 'string' ? citation.title : '',
     date: longDate(date),
     pageNumber: whole(pageNumber) ? pageNumber : null,
+    provider: provider(doc.source_provider),
     text, spans,
   };
+}
+
+// Control #276: who holds the original, from the section document's own source_provider (the same
+// credit the Item shows in Search and View Article). Its name, and its address only when that is a
+// plain https:// URL; null without a name, so the line is left out.
+function provider(given) {
+  const name = typeof given?.name === 'string' ? given.name.trim() : '';
+  if (!name) return null;
+  let url = '';
+  try {
+    const parsed = typeof given.url === 'string' ? new URL(given.url) : null;
+    if (parsed && parsed.protocol === 'https:' && !parsed.username && !parsed.password) url = parsed.href;
+  } catch {}
+  return {name, url};
 }
 
 // A section's outline on its page, clamped to the page, with its bounding box; null without one.
@@ -307,7 +322,8 @@ function textHTML(clip, layout, name = clip.alt) {
 // in the placeholder, which has no clipping and so links the Article here. The paper and date are
 // said here only, not in the alt text. Its parts are separated by a space as well as by layout, so
 // they read apart without the stylesheet (reader mode, copied text). The printed caption is
-// machine-read text, and says so.
+// machine-read text, and says so. Control #276: under the paper and date, on its own line, who holds
+// the original ("Source: Manx National Heritage"), its name linked to the provider's site.
 function captionHTML(clip, layout, name = clip.alt) {
   const source = layout
     ? [layout.paper ? '<cite>' + escapeHTML(layout.paper) + '</cite>' : '', escapeHTML(layout.date), layout.pageNumber ? 'page ' + layout.pageNumber : ''].filter(Boolean).join(', ')
@@ -315,7 +331,10 @@ function captionHTML(clip, layout, name = clip.alt) {
   return '<figcaption>' + [clip.caption ? '<span class="blog-clipping-caption">' + clip.caption + '</span>' : '',
     layout?.printed && !layout.captions?.length ? '<span class="blog-clipping-printed"><span class="blog-clipping-label">Printed caption:</span> ' + escapeHTML(layout.printed)
       + ' <span class="blog-clipping-machine">(read by machine)</span></span>' : '',
-    source ? '<span class="blog-clipping-source">' + source + '</span>' : ''].filter(Boolean).join(' ') + '</figcaption>';
+    source ? '<span class="blog-clipping-source">' + source + '</span>' : '',
+    layout?.provider ? '<span class="blog-clipping-provider">Source: ' + (layout.provider.url
+      ? '<a href="' + escapeHTML(layout.provider.url) + '">' + escapeHTML(layout.provider.name) + '</a>'
+      : escapeHTML(layout.provider.name)) + '</span>' : ''].filter(Boolean).join(' ') + '</figcaption>';
 }
 
 // A clipping is its figure (the clipping and its caption), then "Read the text". A figcaption must be
