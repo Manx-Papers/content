@@ -1,12 +1,12 @@
 {
   "source": "Manx-Papers/web",
-  "commit": "2facedcda31ed0166f5c33efc9f576962474d6e2",
-  "source_status": "Manx-Papers/web main 2facedc, the merge of web#219 (Control #270 blog draft preview: renderPost/renderMarkdown gain options the published page does not use; the slug \"preview\" is reserved; the no-BLOG 404 carries private, noindex headers). Only blog.mjs and markdown.mjs changed since 3586790. All five files are identical to web main at that commit.",
+  "commit": "8115865a0feefaa6deeff35a60c1a7ad49886d6d",
+  "source_status": "Manx-Papers/web main 8115865, the merge of web#229 (Control #276: a blog clipping’s caption names its source, “Source: <provider>” linked to the provider’s https:// site, on its own line under the paper and date, from the section document’s source_provider). Only clipping.mjs changed since 2facedc. All five files are identical to web main at that commit.",
   "drift_guard": "web test/blog-vendor.test.mjs pins the same five hashes, so a web change to these files fails web CI until this copy is updated too.",
   "note": "Copied unchanged from web src/ so posts are checked by the exact rules the Web Worker serves with. Update all five together when web's src/blog.mjs, clipping.mjs, markdown.mjs, proxy.mjs or security.mjs change; tests/content.test.mjs checks these hashes.",
   "files": {
     "blog.mjs": "43b1d3d431c9b33817d00c37157f7a5899f57ea2b9641741c39d58c7ef43351c",
-    "clipping.mjs": "de51be03cc21c57764ede44944cdaefb29b7c6b94acf66aa3fcd88f7067569d3",
+    "clipping.mjs": "0bd1e745087631f06a9af6dff7700beef8f15e71487f416becb927a94c998258",
     "markdown.mjs": "bca30b7833bcee129aaff02ce679a4e13dfa8cbd130f83a674a9fa76cb2a8985",
     "proxy.mjs": "93f5fb45f661d4d9ddac0690a0b2105d4f3919b0773614e7c22991de7b5d7f04",
     "security.mjs": "3b03125d19676f20d1d891a2103d7a42ec3a0cb72c741d82c91126662c616854"
